@@ -24,21 +24,21 @@ services:
   #   networks:
   #     - proxy992-network
 
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: proxy992-redis
-  #   ports:
-  #     - "${REDIS_PORT:-6379}:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 5
-  #   networks:
-  #     - proxy992-network
+  redis:
+    image: redis:7-alpine
+    container_name: proxy992-redis
+    ports:
+      - "${REDIS_PORT:-6372}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - proxy992-network
 
   backend:
     build:
@@ -46,7 +46,7 @@ services:
       dockerfile: Dockerfile
       # BuildKit cache mounts for faster npm installs
       cache_from:
-        - node:18-alpine
+        - node:20-alpine
     container_name: proxy992-backend
     environment:
       NODE_ENV: ${NODE_ENV:-development}
@@ -56,8 +56,8 @@ services:
       # DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
       # DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       # DATABASE_NAME: ${POSTGRES_DB:-proxy992}
-      REDIS_HOST: 127.0.0.1
-      REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6372
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-key}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
@@ -69,9 +69,9 @@ services:
       SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME:-}
     ports:
       - "${BACKEND_PORT:-3400}:3400"
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -90,8 +90,8 @@ services:
     environment:
       GATEWAY_PORT: ${GATEWAY_PORT:-8880}
       BACKEND_API_URL: http://backend:3400
-      REDIS_HOST: 127.0.0.1
-      REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6372
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
       TLS_CERT_PATH: /certs/cert.pem
       TLS_KEY_PATH: /certs/key.pem
@@ -102,8 +102,8 @@ services:
     depends_on:
       backend:
         condition: service_started
-      # redis:
-      #   condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./gateway/certs:/certs
     networks:
