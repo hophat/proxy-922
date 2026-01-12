@@ -5,9 +5,9 @@ set -e
 echo "🚀 Starting backend..."
 
 # Check if node_modules exists and has required packages
-if [ ! -d "/app/node_modules" ] || [ ! -f "/app/node_modules/@nestjs/config/package.json" ]; then
+if [ ! -d "/app/node_modules" ] || [ ! -f "/app/node_modules/@nestjs/config/package.json" ] || [ ! -f "/app/node_modules/nodemailer/package.json" ]; then
   echo "📦 Installing dependencies..."
-  npm install
+  npm install --include=dev
   echo "✅ Dependencies installed"
 fi
 

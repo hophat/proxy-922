@@ -8,8 +8,9 @@ COPY package*.json ./
 # Install dependencies with npm ci (faster and more reliable than npm install)
 # Use BuildKit cache mount for node_modules (requires DOCKER_BUILDKIT=1)
 # Syntax: --mount=type=cache,target=/root/.npm
+# Include devDependencies for TypeScript compilation
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --only=production=false
+    npm ci --include=dev
 
 # Copy source code
 COPY . .
