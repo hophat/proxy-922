@@ -1,5 +1,9 @@
 # version: '3.8' # Removed - obsolete in newer Docker Compose
 
+# Enable BuildKit for faster builds
+# Usage: DOCKER_BUILDKIT=1 docker compose build
+# Or set: export DOCKER_BUILDKIT=1
+
 services:
   # postgres:
   #   image: postgres:15-alpine
@@ -20,26 +24,29 @@ services:
   #   networks:
   #     - proxy992-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: proxy992-redis
-    ports:
-      - "${REDIS_PORT:-6371}:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-    networks:
-      - proxy992-network
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: proxy992-redis
+  #   ports:
+  #     - "${REDIS_PORT:-6379}:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+  #   networks:
+  #     - proxy992-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      # BuildKit cache mounts for faster npm installs
+      cache_from:
+        - node:18-alpine
     container_name: proxy992-backend
     environment:
       NODE_ENV: ${NODE_ENV:-development}
@@ -49,7 +56,7 @@ services:
       # DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
       # DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       # DATABASE_NAME: ${POSTGRES_DB:-proxy992}
-      REDIS_HOST: redis
+      REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-key}
@@ -62,9 +69,9 @@ services:
       SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME:-}
     ports:
       - "${BACKEND_PORT:-3300}:3300"
-    depends_on:
-      redis:
-        condition: service_healthy
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -76,14 +83,14 @@ services:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-      # Enable BuildKit for faster builds
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+      # BuildKit cache for Go modules
+      cache_from:
+        - golang:1.21-alpine
     container_name: proxy992-gateway
     environment:
-      GATEWAY_PORT: ${GATEWAY_PORT:-8080}
+      GATEWAY_PORT: ${GATEWAY_PORT:-8880}
       BACKEND_API_URL: http://backend:3300
-      REDIS_HOST: redis
+      REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
       TLS_CERT_PATH: /certs/cert.pem
@@ -91,12 +98,12 @@ services:
       STICKY_TTL: ${STICKY_TTL:-900}
       HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-45}
     ports:
-      - "${GATEWAY_PORT:-8080}:8080"
+      - "${GATEWAY_PORT:-8880}:8880"
     depends_on:
       backend:
         condition: service_started
-      redis:
-        condition: service_healthy
+      # redis:
+      #   condition: service_healthy
     volumes:
       - ./gateway/certs:/certs
     networks:

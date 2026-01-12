@@ -1,12 +1,15 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies with npm ci (faster and more reliable than npm install)
+# Use BuildKit cache mount for node_modules (requires DOCKER_BUILDKIT=1)
+# Syntax: --mount=type=cache,target=/root/.npm
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production=false
 
 # Copy source code
 COPY . .

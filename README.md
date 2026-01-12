@@ -16,7 +16,7 @@ User App
 ## Yêu cầu
 
 - Docker & Docker Compose
-- Node.js 18+ (cho development backend)
+- Node.js 20+ (cho development backend)
 - Go 1.21+ (cho development gateway)
 - PostgreSQL 15+
 - Redis 7+

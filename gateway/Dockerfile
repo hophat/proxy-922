@@ -5,8 +5,10 @@ WORKDIR /app
 
 # Copy go mod files first (better cache layer)
 COPY go.mod go.sum ./
-# Download dependencies (cached if go.mod/go.sum unchanged)
-RUN go mod download
+# Download dependencies with BuildKit cache mount (requires DOCKER_BUILDKIT=1)
+# This caches Go modules between builds
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # Copy source code
 COPY . .
