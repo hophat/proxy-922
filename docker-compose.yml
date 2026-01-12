@@ -50,7 +50,7 @@ services:
     container_name: proxy992-backend
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${BACKEND_PORT:-3300}
+      PORT: ${BACKEND_PORT:-3400}
       # DATABASE_HOST: postgres
       # DATABASE_PORT: 5432
       # DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
@@ -68,7 +68,7 @@ services:
       SEPAY_BANK_NAME: ${SEPAY_BANK_NAME:-Vietcombank}
       SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME:-}
     ports:
-      - "${BACKEND_PORT:-3300}:3300"
+      - "${BACKEND_PORT:-3400}:3400"
     # depends_on:
     #   redis:
     #     condition: service_healthy
@@ -89,7 +89,7 @@ services:
     container_name: proxy992-gateway
     environment:
       GATEWAY_PORT: ${GATEWAY_PORT:-8880}
-      BACKEND_API_URL: http://backend:3300
+      BACKEND_API_URL: http://backend:3400
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
