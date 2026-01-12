@@ -10,7 +10,13 @@ export default defineConfig(({ mode }) => {
   // Get API URL from environment variable or use default
   const apiUrl = env.VITE_API_URL || "http://localhost:3300";
   
+  // Get base path from environment variable or use default
+  const basePath = env.VITE_ADMIN_BASE_PATH || "/admin";
+  // Ensure base path ends with / for Vite
+  const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
+  
   return {
+    base: base,
     plugins: [react()],
     resolve: {
       alias: {

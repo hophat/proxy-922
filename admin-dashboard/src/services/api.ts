@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
+import { ADMIN_BASE_PATH } from "../constants/routes";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3300";
 
@@ -34,7 +35,7 @@ class ApiClient {
         if (error.response?.status === 401) {
           // Unauthorized - clear token and redirect to login
           localStorage.removeItem("admin_token");
-          window.location.href = "/login";
+          window.location.href = `${ADMIN_BASE_PATH}/login`;
         }
         return Promise.reject(error);
       }

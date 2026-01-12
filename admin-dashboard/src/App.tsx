@@ -11,11 +11,12 @@ import PaymentsPage from "./pages/payments/PaymentsPage";
 import PortMappingsPage from "./pages/port-mappings/PortMappingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
+import { ADMIN_BASE_PATH } from "./constants/routes";
 
 const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={ADMIN_BASE_PATH}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
