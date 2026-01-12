@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { adminService } from "../../services/admin";
-import { Gateway, GatewayStatus } from "../../types";
+import { Gateway } from "../../types";
 import { Plus, Edit, X } from "lucide-react";
 
 const GatewaysPage = () => {

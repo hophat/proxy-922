@@ -3,22 +3,43 @@ productName: Proxy992 Client
 directories:
   buildResources: build
   output: dist
+
+# Enable asar để nén files (giảm kích thước đáng kể)
+asar: true
+
+# Compression level
+compression: maximum
+
+# Files to include - chỉ include những gì cần thiết
 files:
-  - dist/**/*
+  - dist/main/**/*
+  - dist/renderer/**/*
   - package.json
+
+# Exclude files không cần thiết
+fileAssociations: []
+
 win:
   target:
     - nsis
   icon: build/icon.ico
+  # Tối ưu kích thước cho Windows
+  artifactName: "${productName} Setup ${version}.${ext}"
+
 mac:
   target:
     - dmg
-    - zip
   category: public.app-category.utilities
   icon: build/icon.icns
+  # Chỉ build DMG, không build zip
+  artifactName: "${productName}-${version}.${ext}"
+
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
+
+dmg:
+  writeUpdateInfo: false
 

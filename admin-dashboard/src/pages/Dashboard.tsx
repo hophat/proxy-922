@@ -133,7 +133,7 @@ const Dashboard = () => {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {userData.map((entry, index) => (
+                {userData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -156,7 +156,7 @@ const Dashboard = () => {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {proxyData.map((entry, index) => (
+                {proxyData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
