@@ -1,5 +1,5 @@
-import { Controller, Post, Get, Body, Headers, UseGuards } from '@nestjs/common';
-import { AuthService, LoginDto, RegisterDto } from './auth.service';
+import { Controller, Post, Get, Body, Headers, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { AuthService, LoginDto, RegisterDto, VerifyOtpDto } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -9,6 +9,17 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: VerifyOtpDto & { password: string }) {
+    const { email, code, password } = body;
+    return this.authService.verifyOtpAndRegister({ email, code }, password);
+  }
+
+  @Post('resend-otp')
+  async resendOtp(@Body() body: { email: string }) {
+    return this.authService.resendOtp(body.email);
   }
 
   @Post('login')
@@ -35,6 +46,25 @@ export class AuthController {
       return { error: 'Invalid token' };
     }
     return { userId: validation.userId, email: validation.email };
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Body() body: { currentPassword: string; newPassword: string },
+    @Headers('authorization') authorization: string,
+  ) {
+    const token = authorization.substring(7);
+    const validation = await this.authService.validateToken(token);
+    if (!validation.valid || !validation.userId) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    return this.authService.changePassword(
+      validation.userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 }
 

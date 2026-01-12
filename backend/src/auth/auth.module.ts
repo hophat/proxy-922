@@ -5,12 +5,14 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { TokensModule } from '../tokens/tokens.module';
+import { OtpModule } from '../otp/otp.module';
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
     UsersModule,
     TokensModule,
+    OtpModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'change-this-secret-key',

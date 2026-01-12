@@ -19,10 +19,11 @@ interface ProxiesProps {
   onLogout: () => void;
   onNavigateToDashboard: () => void;
   onNavigateToPortForwards: () => void;
+  onNavigateToPaymentHistory: () => void;
+  onNavigateToSettings: () => void;
 }
 
-
-export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigateToDashboard, onNavigateToPortForwards }) => {
+export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigateToDashboard, onNavigateToPortForwards, onNavigateToPaymentHistory, onNavigateToSettings }) => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [upstreams, setUpstreams] = useState<PublicUpstream[]>([]);
   const [displayedUpstreams, setDisplayedUpstreams] = useState<PublicUpstream[]>([]);
@@ -154,7 +155,10 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
                   Đã Mua
                 </p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+              <div 
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
+                onClick={onNavigateToPaymentHistory}
+              >
                 <span
                   className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
                   style={{ fontSize: '24px' }}
@@ -165,7 +169,10 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
                   Lịch sử thanh toán
                 </p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+              <div 
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
+                onClick={() => onNavigateToSettings?.()}
+              >
                 <span
                   className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
                   style={{ fontSize: '24px' }}
@@ -260,7 +267,7 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
               >
                 refresh
               </span>
-              <span>Làm mới (Random)</span>
+              <span>Làm mới</span>
             </button>
           </div>
 

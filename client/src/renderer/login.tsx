@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface LoginProps {
   onLogin: (username: string, password: string) => Promise<void>;
-  onRegister?: (username: string, password: string) => Promise<void>;
+  onRegister?: () => void;
   error?: string;
 }
 
@@ -42,7 +42,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">ProxyControl</h1>
             <p className="mt-2 text-base font-normal text-slate-500 dark:text-text-muted text-center max-w-xs">
-              Secure access to your distributed network infrastructure
+              Truy cập an toàn vào hệ thống mạng phân tán của bạn
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
               </div>
-              <span className="text-sm font-medium text-primary">Gateway Online</span>
+              <span className="text-sm font-medium text-primary">Gateway Trực Tuyến</span>
               <div className="ml-auto text-xs font-mono text-primary/70">US-EAST-1</div>
             </div>
 
@@ -62,7 +62,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 {/* Username Field */}
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-slate-700 dark:text-white">Username or API Key</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-white">Email hoặc API Key</span>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-text-muted material-symbols-outlined text-[20px]">person</span>
                     <input
@@ -71,7 +71,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 dark:border-border-dark bg-slate-50 dark:bg-[#111921] px-4 py-3 pl-11 text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary h-14 transition-all"
-                      placeholder="Enter your username"
+                      placeholder="Nhập email của bạn"
                       required
                       disabled={loading}
                     />
@@ -81,8 +81,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
                 {/* Password Field */}
                 <label className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700 dark:text-white">Password</span>
-                    <a className="text-xs font-medium text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                    <span className="text-sm font-medium text-slate-700 dark:text-white">Mật khẩu</span>
+                    <a className="text-xs font-medium text-primary hover:text-primary/80 transition-colors" href="#">Quên mật khẩu?</a>
                   </div>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-text-muted material-symbols-outlined text-[20px]">lock</span>
@@ -92,7 +92,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-lg border border-gray-300 dark:border-border-dark bg-slate-50 dark:bg-[#111921] px-4 py-3 pl-11 pr-12 text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary h-14 transition-all"
-                      placeholder="Enter your password"
+                      placeholder="Nhập mật khẩu của bạn"
                       required
                       disabled={loading}
                     />
@@ -126,7 +126,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
                     <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      Log In
+                      Đăng nhập
                       <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                     </span>
                   )}
@@ -134,20 +134,35 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
               </form>
             </div>
 
-            {/* Footer Support */}
-            <div className="bg-slate-50 dark:bg-[#111921]/50 border-t border-gray-200 dark:border-border-dark p-4 text-center">
-              <p className="text-sm text-slate-500 dark:text-text-muted">
-                Need help connecting? <a className="font-medium text-primary hover:underline" href="#">Contact Support</a>
-              </p>
+            {/* Footer */}
+            <div className="bg-slate-50 dark:bg-[#111921]/50 border-t border-gray-200 dark:border-border-dark p-4">
+              {onRegister && (
+                <div className="text-center mb-3">
+                  <p className="text-sm text-slate-500 dark:text-text-muted mb-2">
+                    Chưa có tài khoản?
+                  </p>
+                  <button
+                    onClick={onRegister}
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Đăng ký ngay
+                  </button>
+                </div>
+              )}
+              <div className="text-center pt-3 border-t border-gray-200 dark:border-border-dark">
+                <p className="text-sm text-slate-500 dark:text-text-muted">
+                  Cần trợ giúp? <a className="font-medium text-primary hover:underline" href="#">Liên hệ hỗ trợ</a>
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Bottom Links */}
           <div className="flex justify-center gap-6 text-sm text-slate-400 dark:text-slate-600">
-            <a className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors" href="#">Privacy Policy</a>
-            <a className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors" href="#">Terms of Service</a>
+            <a className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors" href="#">Chính sách bảo mật</a>
+            <a className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors" href="#">Điều khoản dịch vụ</a>
             <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">language</span> English
+              <span className="material-symbols-outlined text-[14px]">language</span> Tiếng Việt
             </span>
           </div>
         </div>

@@ -102,6 +102,7 @@ export function isAuthenticated(): boolean {
 export async function register(email: string, password: string, backendURL: string): Promise<{
   success: boolean;
   error?: string;
+  message?: string;
 }> {
   try {
     console.log(`[Auth] Attempting register to ${backendURL}/auth/register`);
@@ -132,12 +133,109 @@ export async function register(email: string, password: string, backendURL: stri
     }
 
     const data = JSON.parse(response.body);
-    console.log('[Auth] Register successful');
+    console.log('[Auth] Register successful, OTP sent');
     return {
       success: true,
+      message: data.message || 'OTP đã được gửi đến email của bạn',
     };
   } catch (err: any) {
     console.error('[Auth] Register error:', err);
+    const errorMessage = err.message || 'Không thể kết nối đến server. Vui lòng kiểm tra backend đã chạy chưa.';
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+export async function verifyOtp(email: string, code: string, password: string, backendURL: string): Promise<{
+  success: boolean;
+  error?: string;
+  message?: string;
+}> {
+  try {
+    console.log(`[Auth] Attempting verify OTP to ${backendURL}/auth/verify-otp`);
+    const response = await httpRequest(`${backendURL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code, password }),
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      let errorMessage = `HTTP ${response.statusCode}`;
+      try {
+        const error = JSON.parse(response.body);
+        errorMessage = error.message || error.error || errorMessage;
+      } catch (e) {
+        if (response.body) {
+          errorMessage = response.body;
+        }
+      }
+      console.error(`[Auth] Verify OTP failed: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    const data = JSON.parse(response.body);
+    console.log('[Auth] Verify OTP successful');
+    return {
+      success: true,
+      message: data.message || 'Đăng ký thành công!',
+    };
+  } catch (err: any) {
+    console.error('[Auth] Verify OTP error:', err);
+    const errorMessage = err.message || 'Không thể kết nối đến server. Vui lòng kiểm tra backend đã chạy chưa.';
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+export async function resendOtp(email: string, backendURL: string): Promise<{
+  success: boolean;
+  error?: string;
+  message?: string;
+}> {
+  try {
+    console.log(`[Auth] Attempting resend OTP to ${backendURL}/auth/resend-otp`);
+    const response = await httpRequest(`${backendURL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      let errorMessage = `HTTP ${response.statusCode}`;
+      try {
+        const error = JSON.parse(response.body);
+        errorMessage = error.message || error.error || errorMessage;
+      } catch (e) {
+        if (response.body) {
+          errorMessage = response.body;
+        }
+      }
+      console.error(`[Auth] Resend OTP failed: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    const data = JSON.parse(response.body);
+    console.log('[Auth] Resend OTP successful');
+    return {
+      success: true,
+      message: data.message || 'OTP đã được gửi lại',
+    };
+  } catch (err: any) {
+    console.error('[Auth] Resend OTP error:', err);
     const errorMessage = err.message || 'Không thể kết nối đến server. Vui lòng kiểm tra backend đã chạy chưa.';
     return {
       success: false,
@@ -336,6 +434,59 @@ export async function getActiveProxiesCount(backendURL: string): Promise<number>
   } catch (err: any) {
     console.error('[Auth] Failed to get active proxies:', err);
     return 0;
+  }
+}
+
+export async function changePassword(
+  backendURL: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  const token = getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      let errorMessage = `HTTP ${response.statusCode}`;
+      try {
+        const error = JSON.parse(response.body);
+        errorMessage = error.message || error.error || errorMessage;
+      } catch (e) {
+        if (response.body) {
+          errorMessage = response.body;
+        }
+      }
+      console.error(`[Auth] Change password failed: ${errorMessage}`);
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+
+    const data = JSON.parse(response.body);
+    console.log('[Auth] Change password successful');
+    return {
+      success: true,
+      message: data.message || 'Đổi mật khẩu thành công',
+    };
+  } catch (err: any) {
+    console.error('[Auth] Change password error:', err);
+    const errorMessage = err.message || 'Không thể kết nối đến server';
+    return {
+      success: false,
+      error: errorMessage,
+    };
   }
 }
 

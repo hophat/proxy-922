@@ -11,6 +11,14 @@ try {
       console.log('[Preload] register called with email:', email);
       return ipcRenderer.invoke('register', email, password);
     },
+    verifyOtp: (email: string, code: string, password: string) => {
+      console.log('[Preload] verifyOtp called');
+      return ipcRenderer.invoke('verifyOtp', email, code, password);
+    },
+    resendOtp: (email: string) => {
+      console.log('[Preload] resendOtp called');
+      return ipcRenderer.invoke('resendOtp', email);
+    },
     login: (email: string, password: string) => {
       console.log('[Preload] login called with email:', email);
       return ipcRenderer.invoke('login', email, password);
@@ -50,6 +58,14 @@ try {
     logout: () => {
       console.log('[Preload] logout called');
       return ipcRenderer.invoke('logout');
+    },
+    changePassword: (currentPassword: string, newPassword: string) => {
+      console.log('[Preload] changePassword called');
+      return ipcRenderer.invoke('changePassword', currentPassword, newPassword);
+    },
+    getSystemInfo: () => {
+      console.log('[Preload] getSystemInfo called');
+      return ipcRenderer.invoke('getSystemInfo');
     },
     portForward: {
       refresh: () => {
@@ -91,6 +107,10 @@ try {
       createOrder: (createDto: any) => {
         console.log('[Preload] payments.createOrder called');
         return ipcRenderer.invoke('payments:createOrder', createDto);
+      },
+      getOrders: () => {
+        console.log('[Preload] payments.getOrders called');
+        return ipcRenderer.invoke('payments:getOrders');
       },
       getOrderStatus: (orderCode: string) => {
         console.log('[Preload] payments.getOrderStatus called');

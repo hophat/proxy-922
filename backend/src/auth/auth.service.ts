@@ -1,8 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { TokensService } from '../tokens/tokens.service';
+import { OtpService } from '../otp/otp.service';
 
 export interface LoginDto {
   email: string;
@@ -12,6 +13,11 @@ export interface LoginDto {
 export interface RegisterDto {
   email: string;
   password: string;
+}
+
+export interface VerifyOtpDto {
+  email: string;
+  code: string;
 }
 
 export interface LoginResponse {
@@ -39,6 +45,7 @@ export class AuthService {
     private usersService: UsersService,
     private tokensService: TokensService,
     private jwtService: JwtService,
+    private otpService: OtpService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<RegisterResponse> {
@@ -59,19 +66,57 @@ export class AuthService {
       throw new UnauthorizedException('Password must be at least 6 characters');
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(registerDto.password, 10);
-
-    // Create user (quota will be set by admin later)
-    const user = await this.usersService.create(registerDto.email, passwordHash);
+    // Send OTP to email
+    await this.otpService.sendOtp(registerDto.email);
 
     return {
       success: true,
-      message: 'Registration successful. Please contact admin to activate your account and set quota.',
+      message: 'OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email và nhập mã OTP để hoàn tất đăng ký.',
+    };
+  }
+
+  async verifyOtpAndRegister(verifyDto: VerifyOtpDto, password: string): Promise<RegisterResponse> {
+    // Verify OTP
+    const isValid = await this.otpService.verifyOtp(verifyDto.email, verifyDto.code);
+    if (!isValid) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    // Check if user already exists (double check)
+    const existingUser = await this.usersService.findByEmail(verifyDto.email);
+    if (existingUser) {
+      throw new UnauthorizedException('Email already registered');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user (quota will be set by admin later)
+    const user = await this.usersService.create(verifyDto.email, passwordHash);
+
+    return {
+      success: true,
+      message: 'Đăng ký thành công! Vui lòng đăng nhập để sử dụng dịch vụ.',
       user: {
         id: user.id,
         email: user.email,
       },
+    };
+  }
+
+  async resendOtp(email: string): Promise<{ success: boolean; message: string }> {
+    // Check if user already exists
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new UnauthorizedException('Email already registered');
+    }
+
+    // Send OTP
+    await this.otpService.sendOtp(email);
+
+    return {
+      success: true,
+      message: 'OTP đã được gửi lại đến email của bạn',
     };
   }
 
@@ -138,6 +183,39 @@ export class AuthService {
     } catch (error) {
       return { valid: false };
     }
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const user = await this.usersService.findById(userId);
+    if (!user || !user.active) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Validate new password (minimum 6 characters)
+    if (newPassword.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters');
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await this.usersService.updatePassword(userId, newPasswordHash);
+
+    return {
+      success: true,
+      message: 'Password changed successfully',
+    };
   }
 
   private parseExpiresIn(expiresIn: string): number {

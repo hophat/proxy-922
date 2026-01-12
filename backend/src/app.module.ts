@@ -19,6 +19,7 @@ import { PurchasesModule } from './purchases/purchases.module';
 import { PortMappingsModule } from './port-mappings/port-mappings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PaymentOrder } from './payments/payment-order.entity';
+import { EmailOtp } from './otp/otp.entity';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PaymentOrder } from './payments/payment-order.entity';
         PortMapping,
         UserProxyPurchase,
         PaymentOrder,
+        EmailOtp,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',

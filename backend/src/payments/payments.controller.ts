@@ -44,6 +44,20 @@ export class PaymentsController {
     );
   }
 
+  @Get('orders')
+  @UseGuards(JwtAuthGuard)
+  async getOrders(
+    @Headers('authorization') authorization: string,
+  ) {
+    const token = authorization.substring(7);
+    const validation = await this.authService.validateToken(token);
+    if (!validation.valid || !validation.userId) {
+      throw new Error('Invalid token');
+    }
+
+    return this.paymentsService.getOrdersForUser(validation.userId);
+  }
+
   @Get('orders/:orderCode')
   @UseGuards(JwtAuthGuard)
   async getOrder(

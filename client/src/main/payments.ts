@@ -110,6 +110,45 @@ export async function createUpstreamPaymentOrder(
   }
 }
 
+export async function getPaymentOrders(
+  backendURL: string,
+): Promise<PaymentOrderResponse[]> {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/payments/orders`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.statusCode === 200) {
+      const data = JSON.parse(response.body);
+      return Array.isArray(data) ? data : [];
+    }
+
+    let errorMessage = `HTTP ${response.statusCode}`;
+    try {
+      const error = JSON.parse(response.body);
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      if (response.body) {
+        errorMessage = response.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  } catch (err: any) {
+    console.error('[Payments] Failed to get payment orders:', err);
+    throw err;
+  }
+}
+
 export async function getPaymentOrderStatus(
   backendURL: string,
   orderCode: string,

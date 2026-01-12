@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Login } from './login';
+import { Register } from './register';
 import { Dashboard } from './dashboard';
 import { Proxies } from './proxies';
 import { PortForwards } from './port-forwards';
+import { PaymentHistory } from './PaymentHistory';
+import { Settings } from './Settings';
 
-type Route = 'dashboard' | 'proxies' | 'port-forwards';
+type Route = 'dashboard' | 'proxies' | 'port-forwards' | 'payment-history' | 'settings';
 
 export const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,6 +18,7 @@ export const App: React.FC = () => {
   const [activeProxiesCount, setActiveProxiesCount] = useState(0);
   const [userEmail, setUserEmail] = useState<string>('');
   const [error, setError] = useState<string | undefined>();
+  const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
     console.log('[Renderer] App mounted, checking auth...');
@@ -134,26 +138,66 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleRegister = async (email: string, password: string) => {
+  const handleRegister = async (email: string, password: string): Promise<{ success: boolean; message?: string; error?: string }> => {
     console.log('[Renderer] handleRegister called with email:', email);
     
     if (!window.electronAPI) {
-      setError('electronAPI is not available. Please restart the app.');
-      return;
+      const errorMsg = 'electronAPI is not available. Please restart the app.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     }
 
     try {
       setError(undefined);
       const result = await window.electronAPI.register(email, password);
-      if (result?.success) {
-        // Registration successful, show success message (handled in Login component)
-        return;
-      } else {
-        setError(result?.error || 'Registration failed');
-      }
+      return result || { success: false, error: 'Registration failed' };
     } catch (err: any) {
       console.error('[Renderer] Register error:', err);
-      setError(err.message || 'Registration failed');
+      const errorMsg = err.message || 'Registration failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  const handleVerifyOtp = async (email: string, code: string, password: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+    console.log('[Renderer] handleVerifyOtp called');
+    
+    if (!window.electronAPI) {
+      const errorMsg = 'electronAPI is not available. Please restart the app.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      setError(undefined);
+      const result = await window.electronAPI.verifyOtp(email, code, password);
+      return result || { success: false, error: 'OTP verification failed' };
+    } catch (err: any) {
+      console.error('[Renderer] Verify OTP error:', err);
+      const errorMsg = err.message || 'OTP verification failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  const handleResendOtp = async (email: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+    console.log('[Renderer] handleResendOtp called');
+    
+    if (!window.electronAPI) {
+      const errorMsg = 'electronAPI is not available. Please restart the app.';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      setError(undefined);
+      const result = await window.electronAPI.resendOtp(email);
+      return result || { success: false, error: 'Resend OTP failed' };
+    } catch (err: any) {
+      console.error('[Renderer] Resend OTP error:', err);
+      const errorMsg = err.message || 'Resend OTP failed';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
@@ -264,7 +308,18 @@ export const App: React.FC = () => {
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} onRegister={handleRegister} error={error} />;
+    if (showRegister) {
+      return (
+        <Register
+          onRegister={handleRegister}
+          onVerifyOtp={handleVerifyOtp}
+          onResendOtp={handleResendOtp}
+          onBackToLogin={() => setShowRegister(false)}
+          error={error}
+        />
+      );
+    }
+    return <Login onLogin={handleLogin} onRegister={() => setShowRegister(true)} error={error} />;
   }
 
   if (currentRoute === 'proxies') {
@@ -274,6 +329,8 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
         onNavigateToDashboard={() => setCurrentRoute('dashboard')}
         onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
+        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
+        onNavigateToSettings={() => setCurrentRoute('settings')}
       />
     );
   }
@@ -285,6 +342,34 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
         onNavigateToDashboard={() => setCurrentRoute('dashboard')}
         onNavigateToProxies={() => setCurrentRoute('proxies')}
+        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
+        onNavigateToSettings={() => setCurrentRoute('settings')}
+      />
+    );
+  }
+
+  if (currentRoute === 'payment-history') {
+    return (
+      <PaymentHistory
+        userEmail={userEmail}
+        onLogout={handleLogout}
+        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
+        onNavigateToProxies={() => setCurrentRoute('proxies')}
+        onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
+        onNavigateToSettings={() => setCurrentRoute('settings')}
+      />
+    );
+  }
+
+  if (currentRoute === 'settings') {
+    return (
+      <Settings
+        userEmail={userEmail}
+        onLogout={handleLogout}
+        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
+        onNavigateToProxies={() => setCurrentRoute('proxies')}
+        onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
+        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
       />
     );
   }
@@ -302,6 +387,8 @@ export const App: React.FC = () => {
       onLogout={handleLogout}
       onNavigateToProxies={() => setCurrentRoute('proxies')}
       onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
+      onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
+      onNavigateToSettings={() => setCurrentRoute('settings')}
     />
   );
 };
@@ -316,6 +403,9 @@ declare global {
         quotaUsed?: number;
         quotaTotal?: number;
       }>;
+      register: (email: string, password: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+      verifyOtp: (email: string, code: string, password: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+      resendOtp: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
       checkAuth: () => Promise<boolean>;
       getProfile: () => Promise<{ userId: string; email: string }>;
       getQuota: () => Promise<{ used: number; total: number }>;
@@ -325,6 +415,21 @@ declare global {
       checkStatus: () => Promise<{ connected: boolean }>;
       reconnect: () => Promise<{ connected: boolean }>;
       logout: () => Promise<{ success: boolean }>;
+      changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+      getSystemInfo: () => Promise<{
+        hostname: string;
+        platform: string;
+        arch: string;
+        type: string;
+        release: string;
+        cpuCount: number;
+        totalMemory: number;
+        freeMemory: number;
+        uptime: number;
+        localIPs: string[];
+      }>;
+      verifyOtp: (email: string, code: string, password: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+      resendOtp: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
       portForward: {
         refresh: () => Promise<any[]>;
         start: (mapping: any) => Promise<{ success: boolean }>;
@@ -336,6 +441,11 @@ declare global {
       upstreams: {
         getAvailable: () => Promise<any[]>;
         createPurchase: (createDto: any) => Promise<any>;
+      };
+      payments: {
+        createOrder: (createDto: any) => Promise<any>;
+        getOrders: () => Promise<any[]>;
+        getOrderStatus: (orderCode: string) => Promise<any>;
       };
     };
   }

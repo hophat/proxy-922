@@ -6,9 +6,10 @@ import * as upstreams from './upstreams';
 import * as payments from './payments';
 
 let mainWindow: BrowserWindow | null = null;
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3300';
-const GATEWAY_HOST = process.env.GATEWAY_HOST || 'localhost';
-const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || '8080', 10);
+// const BACKEND_URL = process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
+const BACKEND_URL = process.env.BACKEND_URL_DEV || 'http://localhost:3300';
+const GATEWAY_HOST = process.env.GATEWAY_HOST || '14.225.254.130';
+const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || '8880', 10);
 
 function createWindow() {
   const fs = require('fs');
@@ -164,6 +165,38 @@ ipcMain.handle('register', async (_, email: string, password: string) => {
   }
 });
 
+ipcMain.handle('verifyOtp', async (_, email: string, code: string, password: string) => {
+  console.log(`[IPC] Verify OTP request received for: ${email}`);
+  console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
+  try {
+    const result = await auth.verifyOtp(email, code, password, BACKEND_URL);
+    console.log(`[IPC] Verify OTP result:`, result.success ? 'SUCCESS' : 'FAILED');
+    return result;
+  } catch (error: any) {
+    console.error(`[IPC] Verify OTP error:`, error);
+    return {
+      success: false,
+      error: error.message || 'OTP verification failed',
+    };
+  }
+});
+
+ipcMain.handle('resendOtp', async (_, email: string) => {
+  console.log(`[IPC] Resend OTP request received for: ${email}`);
+  console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
+  try {
+    const result = await auth.resendOtp(email, BACKEND_URL);
+    console.log(`[IPC] Resend OTP result:`, result.success ? 'SUCCESS' : 'FAILED');
+    return result;
+  } catch (error: any) {
+    console.error(`[IPC] Resend OTP error:`, error);
+    return {
+      success: false,
+      error: error.message || 'Resend OTP failed',
+    };
+  }
+});
+
 ipcMain.handle('login', async (_, email: string, password: string) => {
   console.log(`[IPC] Login request received for: ${email}`);
   console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
@@ -277,6 +310,51 @@ ipcMain.handle('logout', async () => {
   }
 });
 
+ipcMain.handle('changePassword', async (_event, currentPassword: string, newPassword: string) => {
+  console.log(`[IPC] Change password request received`);
+  try {
+    const result = await auth.changePassword(BACKEND_URL, currentPassword, newPassword);
+    return result;
+  } catch (error: any) {
+    console.error(`[IPC] Change password error:`, error);
+    return {
+      success: false,
+      error: error.message || 'Failed to change password',
+    };
+  }
+});
+
+ipcMain.handle('getSystemInfo', async () => {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  const localIPs: string[] = [];
+  
+  Object.keys(interfaces).forEach((name) => {
+    const nets = interfaces[name];
+    if (nets) {
+      nets.forEach((net: any) => {
+        // Skip internal (i.e. 127.0.0.1) and non-IPv4 addresses
+        if (net.family === 'IPv4' && !net.internal) {
+          localIPs.push(net.address);
+        }
+      });
+    }
+  });
+
+  return {
+    hostname: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch(),
+    type: os.type(),
+    release: os.release(),
+    cpuCount: os.cpus().length,
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    uptime: os.uptime(),
+    localIPs,
+  };
+});
+
 ipcMain.handle('reconnect', async () => {
   // Check authentication first
   const isAuth = await auth.checkToken(BACKEND_URL);
@@ -379,6 +457,16 @@ ipcMain.handle('payments:createOrder', async (_event, createDto: any) => {
     return result;
   } catch (error: any) {
     console.error('[IPC] Failed to create payment order:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('payments:getOrders', async () => {
+  try {
+    const result = await payments.getPaymentOrders(BACKEND_URL);
+    return result;
+  } catch (error: any) {
+    console.error('[IPC] Failed to get payment orders:', error);
     throw error;
   }
 });

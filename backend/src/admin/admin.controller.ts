@@ -822,16 +822,37 @@ export class AdminController {
     if (!order) {
       return { error: 'Payment order not found' };
     }
+    const previousStatus = order.status;
+    
+    // Update payment status
     order.status = body.status;
     if (body.status === PaymentOrderStatus.PAID && !order.paidAt) {
       order.paidAt = new Date();
     }
     await this.paymentOrderRepository.save(order);
+    
+    // Nếu status được chuyển thành PAID (manual update), activate purchase
+    let purchaseActivated = false;
+    let activationError: string | null = null;
+    if (body.status === PaymentOrderStatus.PAID && previousStatus !== PaymentOrderStatus.PAID) {
+      try {
+        await this.paymentsService.activatePurchaseFromPaymentOrderId(id);
+        purchaseActivated = true;
+      } catch (error: any) {
+        // Log error nhưng vẫn giữ payment status là PAID
+        // Admin có thể retry hoặc xử lý sau
+        activationError = error.message;
+        console.error(`Failed to activate purchase for payment order ${id}:`, error.message);
+      }
+    }
+    
     return {
       id: order.id,
       status: order.status,
       paidAt: order.paidAt,
       updatedAt: order.updatedAt,
+      purchaseActivated,
+      ...(activationError && { activationError: `Purchase activation failed: ${activationError}` }),
     };
   }
 

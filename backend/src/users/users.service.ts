@@ -62,5 +62,9 @@ export class UsersService {
   async resetQuotaUsed(userId: string): Promise<void> {
     await this.usersRepository.update({ id: userId }, { quotaUsed: 0 });
   }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    await this.usersRepository.update({ id: userId }, { passwordHash });
+  }
 }
 

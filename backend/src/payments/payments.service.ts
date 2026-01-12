@@ -119,6 +119,25 @@ export class PaymentsService {
     });
   }
 
+  async getOrdersForUser(userId: string): Promise<PaymentOrderResponse[]> {
+    const orders = await this.paymentOrderRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      orderCode: order.orderCode,
+      amount: Number(order.amount),
+      status: order.status,
+      qrCodeUrl: order.qrCodeUrl,
+      vaNumber: order.vaNumber,
+      accountName: null,
+      expiredAt: order.expiredAt,
+      createdAt: order.createdAt,
+    }));
+  }
+
   async getOrderByCodeForUser(
     orderCode: string,
     userId: string,
@@ -294,6 +313,26 @@ export class PaymentsService {
         `Purchase may already exist for order ${paymentOrder.orderCode}: ${error.message}`,
       );
     }
+  }
+
+  // Public method để activate purchase từ payment order (dùng cho admin manual update)
+  async activatePurchaseFromPaymentOrderId(paymentOrderId: string): Promise<void> {
+    const paymentOrder = await this.paymentOrderRepository.findOne({
+      where: { id: paymentOrderId },
+    });
+
+    if (!paymentOrder) {
+      throw new NotFoundException(`Payment order not found: ${paymentOrderId}`);
+    }
+
+    if (paymentOrder.status !== PaymentOrderStatus.PAID) {
+      throw new BadRequestException(
+        `Payment order ${paymentOrder.orderCode} is not in PAID status`,
+      );
+    }
+
+    // Sử dụng tryActivatePurchaseFromOrder để handle idempotent
+    await this.tryActivatePurchaseFromOrder(paymentOrder);
   }
 
   private generateOrderCode(): string {

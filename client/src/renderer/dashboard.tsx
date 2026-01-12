@@ -12,6 +12,8 @@ interface DashboardProps {
   onLogout: () => void;
   onNavigateToProxies: () => void;
   onNavigateToPortForwards: () => void;
+  onNavigateToPaymentHistory: () => void;
+  onNavigateToSettings: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -26,6 +28,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onLogout,
   onNavigateToProxies,
   onNavigateToPortForwards,
+  onNavigateToPaymentHistory,
+  onNavigateToSettings,
 }) => {
   const [showSidebar, setShowSidebar] = useState(true);
   const formatBytes = (bytes: number | undefined): string => {
@@ -92,11 +96,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>shopping_bag</span>
                 <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Đã Mua</p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+              <div 
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
+                onClick={onNavigateToPaymentHistory}
+              >
                 <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>receipt_long</span>
                 <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Lịch sử thanh toán</p>
               </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+              <div 
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
+                onClick={() => onNavigateToSettings?.()}
+              >
                 <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>settings</span>
                 <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Settings</p>
               </div>
