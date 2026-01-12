@@ -44,11 +44,11 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND_PORT:-3300}
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      DATABASE_NAME: ${POSTGRES_DB:-proxy992}
+      # DATABASE_HOST: postgres
+      # DATABASE_PORT: 5432
+      # DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
+      # DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # DATABASE_NAME: ${POSTGRES_DB:-proxy992}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
@@ -63,8 +63,6 @@ services:
     ports:
       - "${BACKEND_PORT:-3300}:3300"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
