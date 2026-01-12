@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Proxy Service Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#197fe6",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111921",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111a22; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #344d65; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b6a88; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Sidebar -->
+<aside class="flex w-64 flex-col border-r border-[#243647] bg-[#111a22] hidden md:flex shrink-0">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-4">
+<!-- Brand / Profile Snippet -->
+<div class="flex gap-3 items-center px-2 py-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gradient-to-br from-primary to-purple-600" data-alt="Abstract gradient logo for the application"></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal">ProxyManager</h1>
+<p class="text-[#93adc8] text-xs font-normal leading-normal">v2.4.0</p>
+</div>
+</div>
+<!-- Nav Items -->
+<div class="flex flex-col gap-2 mt-4">
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#243647] cursor-pointer hover:bg-[#2f455a] transition-colors">
+<div class="text-white material-symbols-outlined" style="font-size: 24px;">dashboard</div>
+<p class="text-white text-sm font-medium leading-normal">Dashboard</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+<div class="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style="font-size: 24px;">wifi_off</div>
+<p class="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Proxies</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+<div class="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style="font-size: 24px;">credit_card</div>
+<p class="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Billing</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+<div class="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style="font-size: 24px;">code</div>
+<p class="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">API Access</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group">
+<div class="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style="font-size: 24px;">settings</div>
+<p class="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Settings</p>
+</div>
+</div>
+</div>
+<!-- Bottom Action -->
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors text-[#93adc8] hover:text-red-400">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium leading-normal">Log Out</p>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex flex-1 flex-col h-full relative overflow-y-auto bg-background-light dark:bg-background-dark">
+<!-- Header -->
+<header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#243647] bg-[#111a22]/95 backdrop-blur-sm px-6 py-3">
+<div class="flex items-center gap-4 text-white">
+<div class="md:hidden text-white cursor-pointer material-symbols-outlined">menu</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Dashboard Overview</h2>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<div class="flex gap-2">
+<button class="flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#243647] hover:bg-[#2f455a] text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+</button>
+<button class="flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-[#243647] hover:bg-[#2f455a] text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">person</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border-2 border-[#243647]" data-alt="User profile avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD5X0SGMFhGvZKq5BnRz_WCEuNHWZyk7w3FlYbrDHnbbEEXZ_4uNiQv6TZc0ArRNhlcGz3bqLpH2a7jBXhLazoLx0Yz4gX8V4B9lnMIyJxjh9W09NvdxWdZ6P_cucvdK0qLhLgml9UT7inANu1kXHNnn1BzffKgeETxDmH8NYlK2KwW1jZnLpGd__4VT5W_Sxidvdvlj7QnYTpCbPkHkX_V7Uv0NIixmjNBNqCDUa9Ir0v2Ry5XjT-qaGlHq-HEua9Kh_COJwXddZQ");'></div>
+</div>
+</header>
+<div class="flex flex-col w-full max-w-[1200px] mx-auto p-4 md:p-6 gap-6">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="flex flex-1 flex-col gap-2 rounded-xl p-6 border border-[#344d65] bg-[#1a2632] shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-[#93adc8] text-sm font-medium leading-normal uppercase tracking-wider">Active Proxies</p>
+<span class="material-symbols-outlined text-primary">router</span>
+</div>
+<p class="text-white tracking-tight text-3xl font-bold leading-tight mt-2">124 <span class="text-[#93adc8] text-xl font-normal">/ 150</span></p>
+<div class="flex items-center gap-1 text-[#0bda5b] text-sm font-medium leading-normal mt-1">
+<span class="material-symbols-outlined" style="font-size: 16px;">trending_up</span>
+<p>+5 added today</p>
+</div>
+</div>
+<div class="flex flex-1 flex-col gap-2 rounded-xl p-6 border border-[#344d65] bg-[#1a2632] shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-[#93adc8] text-sm font-medium leading-normal uppercase tracking-wider">Bandwidth Usage</p>
+<span class="material-symbols-outlined text-primary">bar_chart</span>
+</div>
+<p class="text-white tracking-tight text-3xl font-bold leading-tight mt-2">45.2 <span class="text-[#93adc8] text-xl font-normal">GB</span></p>
+<div class="w-full bg-[#243647] rounded-full h-1.5 mt-2">
+<div class="bg-primary h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+<p class="text-[#93adc8] text-xs font-medium leading-normal mt-1">45% of 100 GB Monthly Quota</p>
+</div>
+<div class="flex flex-1 flex-col gap-2 rounded-xl p-6 border border-[#344d65] bg-[#1a2632] shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-[#93adc8] text-sm font-medium leading-normal uppercase tracking-wider">Current Plan</p>
+<span class="material-symbols-outlined text-primary">workspace_premium</span>
+</div>
+<p class="text-white tracking-tight text-3xl font-bold leading-tight mt-2">Professional</p>
+<div class="flex items-center gap-1 text-[#93adc8] text-sm font-medium leading-normal mt-1">
+<span class="material-symbols-outlined" style="font-size: 16px;">calendar_month</span>
+<p>Renews in 12 days</p>
+</div>
+</div>
+</div>
+<!-- Action Panel & Filters -->
+<div class="flex flex-col gap-4">
+<div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 bg-[#111a22] border border-[#344d65] rounded-xl p-4">
+<div class="flex flex-1 flex-wrap items-center gap-3 w-full">
+<!-- Filter Inputs -->
+<div class="relative w-full md:w-64 group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#93adc8] material-symbols-outlined" style="font-size: 20px;">search</span>
+<input class="w-full bg-[#1a2632] border border-[#344d65] text-white text-sm rounded-lg focus:ring-primary focus:border-primary block pl-10 p-2.5 placeholder-[#586c82]" placeholder="Search Endpoint or User..." type="text"/>
+</div>
+<div class="relative w-full md:w-48">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#93adc8] material-symbols-outlined" style="font-size: 20px;">public</span>
+<select class="w-full bg-[#1a2632] border border-[#344d65] text-white text-sm rounded-lg focus:ring-primary focus:border-primary block pl-10 p-2.5 appearance-none cursor-pointer">
+<option>All Countries</option>
+<option>United States</option>
+<option>Germany</option>
+<option>United Kingdom</option>
+</select>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#93adc8] material-symbols-outlined pointer-events-none" style="font-size: 20px;">expand_more</span>
+</div>
+</div>
+<!-- Global Actions -->
+<div class="flex items-center gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#243647] hover:bg-[#344d65] text-white text-sm font-medium rounded-lg transition-colors border border-[#344d65]">
+<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+<span>Copy All</span>
+</button>
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+<span>Refresh Status</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Data Grid -->
+<div class="flex flex-col border border-[#344d65] rounded-xl overflow-hidden bg-[#111a22] shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#1a2632] border-b border-[#344d65]">
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider">Endpoint</th>
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider">Authentication</th>
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider">Location / ASN</th>
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider">Bandwidth</th>
+<th class="px-6 py-4 text-xs font-semibold text-[#93adc8] uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#243647]">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#1a2632]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#93adc8]" style="font-size: 18px;">dns</span>
+<span class="text-white font-mono text-sm">192.168.45.12:8000</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2 group/auth cursor-pointer" title="Click to copy">
+<span class="text-[#93adc8] font-mono text-sm">user_82a:••••••••</span>
+<span class="material-symbols-outlined text-[#586c82] hover:text-white opacity-0 group-hover/auth:opacity-100 transition-all" style="font-size: 16px;">visibility</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-6 h-4 rounded-sm bg-center bg-cover border border-[#344d65]" data-alt="United States Flag" data-location="United States" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgn_EkIidsUccPnNDcUz2NMZ_ChjmNnfFyyul5jCUZA2PiiYbzDCxvTA5BfqC96usVuGqCiXB_DF2SAUoEyjmjjTF3ZX_GXfuU1gxVBgpQUygxsqgvRPOUt_Moj-aGc5qWU9xOiiFwb62uNH3MunqucxDyJE-1Q0xVlcx6odHuu9khCyStDPi_TKosZPlony-l9xLSEBKGkm7mq_t_4l7H-ALNb4c0QrMqGodLWdu2DXu7IxdkPtzEr__S72fkm3Iqtkwbr-CNBQI');"></div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">United States</span>
+<span class="text-[#586c82] text-xs">AS15169 Google</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Active
+                                        </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col gap-1 w-32">
+<div class="flex justify-between text-xs text-[#93adc8]">
+<span>1.2 GB</span>
+<span>5 GB</span>
+</div>
+<div class="w-full bg-[#243647] rounded-full h-1">
+<div class="bg-primary h-1 rounded-full" style="width: 24%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 text-[#93adc8] hover:text-white hover:bg-[#243647] rounded-md transition-colors" title="Copy Details">
+<span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span>
+</button>
+<button class="p-1.5 text-[#93adc8] hover:text-primary hover:bg-[#243647] rounded-md transition-colors" title="Refresh">
+<span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#1a2632]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#93adc8]" style="font-size: 18px;">dns</span>
+<span class="text-white font-mono text-sm">45.33.22.11:3128</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2 group/auth cursor-pointer" title="Click to copy">
+<span class="text-[#93adc8] font-mono text-sm">user_82a:••••••••</span>
+<span class="material-symbols-outlined text-[#586c82] hover:text-white opacity-0 group-hover/auth:opacity-100 transition-all" style="font-size: 16px;">visibility</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-6 h-4 rounded-sm bg-center bg-cover border border-[#344d65]" data-alt="Germany Flag" data-location="Germany" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDk4k44SN3i2NLAFDMDdtur7RmsdVDrDl4i8MKGGpb8ZG3QBccvpN_FzMKloDgmG3x1rlieBCRfNpBYUVNbvgbxd5vL2crCjp8uMi_nygkFIIhODxCLnvtWwQSGjsn_6LLkEndFQMRRZy4vVm15rdT_KHl6_FlS9L4_Y-whtEOqnYStStDSFmixIHKgdu1-riqQMSecdmoe2-5iT60KIr89l9ephfScDkvBkpLOTIz15OzJkvSYEfdOsbqFlaRK6wvGmTdKhxwlkkY');"></div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Germany</span>
+<span class="text-[#586c82] text-xs">AS24940 Hetzner</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Active
+                                        </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col gap-1 w-32">
+<div class="flex justify-between text-xs text-[#93adc8]">
+<span>3.8 GB</span>
+<span>5 GB</span>
+</div>
+<div class="w-full bg-[#243647] rounded-full h-1">
+<div class="bg-yellow-500 h-1 rounded-full" style="width: 76%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 text-[#93adc8] hover:text-white hover:bg-[#243647] rounded-md transition-colors" title="Copy Details">
+<span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span>
+</button>
+<button class="p-1.5 text-[#93adc8] hover:text-primary hover:bg-[#243647] rounded-md transition-colors" title="Refresh">
+<span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#1a2632]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#93adc8]" style="font-size: 18px;">dns</span>
+<span class="text-white font-mono text-sm">104.21.55.2:1080</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2 group/auth cursor-pointer" title="Click to copy">
+<span class="text-[#93adc8] font-mono text-sm">user_82a:••••••••</span>
+<span class="material-symbols-outlined text-[#586c82] hover:text-white opacity-0 group-hover/auth:opacity-100 transition-all" style="font-size: 16px;">visibility</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-6 h-4 rounded-sm bg-center bg-cover border border-[#344d65]" data-alt="United Kingdom Flag" data-location="United Kingdom" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBKVI78gDew52fzLL3WP4zNzbR4DM1VSz2txYKdh_TAYbYMgnxOT0LfVqXXk-pKQwPx0PtU1xthsmTZsiOwp0DaaoWYrRKCdT6ujv2D2EUJCXS0bmjpyYVSPYWNob2kfz7Or9jxzQQj7sLYH0CUM51_8bQYPN52tBQsSGyX5lkIyqDyHKtQBmUB2A2FnderdCGCM24x7aNCW0K5tAeJkOfBlnHQj1drmVSrT7Q09x_vFofbAnyhZa_01x9Z3mryUCOl6jQ3Ob-Tu1o');"></div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">United Kingdom</span>
+<span class="text-[#586c82] text-xs">AS13335 Cloudflare</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20">
+<span class="size-1.5 rounded-full bg-red-500"></span>
+                                            Blocked
+                                        </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col gap-1 w-32">
+<div class="flex justify-between text-xs text-[#93adc8]">
+<span>0.1 GB</span>
+<span>5 GB</span>
+</div>
+<div class="w-full bg-[#243647] rounded-full h-1">
+<div class="bg-red-500 h-1 rounded-full" style="width: 2%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 text-[#93adc8] hover:text-white hover:bg-[#243647] rounded-md transition-colors" title="Copy Details">
+<span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span>
+</button>
+<button class="p-1.5 text-[#93adc8] hover:text-primary hover:bg-[#243647] rounded-md transition-colors" title="Refresh">
+<span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#1a2632]/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#93adc8]" style="font-size: 18px;">dns</span>
+<span class="text-white font-mono text-sm">88.12.99.101:8000</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-2 group/auth cursor-pointer" title="Click to copy">
+<span class="text-[#93adc8] font-mono text-sm">user_82a:••••••••</span>
+<span class="material-symbols-outlined text-[#586c82] hover:text-white opacity-0 group-hover/auth:opacity-100 transition-all" style="font-size: 16px;">visibility</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="w-6 h-4 rounded-sm bg-center bg-cover border border-[#344d65]" data-alt="Japan Flag" data-location="Japan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWa9g7h8JmI1_MgthN-YG2zJxombAKqkjykfhts1YzDsEeGEh2JUuH8NsUfaEnu-t7i6jMQgtFGe3fJohBkA1_qP02B0-M8_POA00UHcLqRlYI2b8gkLi0rdaQL106hx4nAapP80t7FIXa4p1V06sy0li4PMycO55awcSYGCBy1LDkd3skCv-TMP-7mmDlt09zrVPMwz2zVMmUURgU83i8df_UL7RMJTf2b-fuFF2OGDzJdPu8E9PP1F8-TtvmXl73-qGEbW5H8nI');"></div>
+<div class="flex flex-col">
+<span class="text-white text-sm font-medium">Japan</span>
+<span class="text-[#586c82] text-xs">AS2516 KDDI</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+<span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            Active
+                                        </span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col gap-1 w-32">
+<div class="flex justify-between text-xs text-[#93adc8]">
+<span>4.9 GB</span>
+<span>5 GB</span>
+</div>
+<div class="w-full bg-[#243647] rounded-full h-1">
+<div class="bg-red-400 h-1 rounded-full" style="width: 98%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 text-[#93adc8] hover:text-white hover:bg-[#243647] rounded-md transition-colors" title="Copy Details">
+<span class="material-symbols-outlined" style="font-size: 20px;">content_copy</span>
+</button>
+<button class="p-1.5 text-[#93adc8] hover:text-primary hover:bg-[#243647] rounded-md transition-colors" title="Refresh">
+<span class="material-symbols-outlined" style="font-size: 20px;">refresh</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between p-4 bg-[#1a2632]/50 border-t border-[#344d65]">
+<span class="text-sm text-[#93adc8]">Showing 1-4 of 124 proxies</span>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-8 rounded-lg bg-[#243647] hover:bg-[#344d65] text-white transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span>
+</button>
+<button class="flex items-center justify-center size-8 rounded-lg bg-[#243647] hover:bg-[#344d65] text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

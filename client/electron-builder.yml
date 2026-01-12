@@ -1,0 +1,24 @@
+appId: com.proxy992.client
+productName: Proxy992 Client
+directories:
+  buildResources: build
+  output: dist
+files:
+  - dist/**/*
+  - package.json
+win:
+  target:
+    - nsis
+  icon: build/icon.ico
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.utilities
+  icon: build/icon.icns
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+

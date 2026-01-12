@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Usage &amp; Quota Screen</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#197fe6",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111921",
+                        "surface-dark": "#1e2832",
+                        "surface-hover": "#243647",
+                        "text-secondary": "#93adc8"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display">
+<div class="relative flex h-screen w-full overflow-hidden">
+<!-- SideNavBar -->
+<div class="hidden md:flex w-64 flex-col bg-[#111a22] border-r border-[#243647] flex-shrink-0">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center px-2 py-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 shrink-0" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWKuEjFxqQsByjYLBNiQUEOgFpeenWWsbVdNzbs-T71GWuPm749U0RYZ9LfWGm9i1EaD-FRjhLf8Qv0Qli6nSGPI12IP2lJf7g5-tie5ksN8wHz855rWxoa1PmiiEXrRG30732WtWGyiSKco-BFuURPMSLTgJ7fHKWRHxqYH_sQFY3S7NBp4jnrQaldZpIndpB6-wnSzJoyt9VZcl-DohBdRUaTl7Bd5NoDzNAMGCQfykWkW3HbM9uP6GI47cP-YI6cCL38wStmeE");'></div>
+<div class="flex flex-col overflow-hidden">
+<h1 class="text-white text-base font-medium leading-normal truncate">ProxyManager</h1>
+<p class="text-text-secondary text-sm font-normal leading-normal truncate">Pro Plan</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-surface-hover hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white" style="font-size: 24px;">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-surface-hover hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white" style="font-size: 24px;">wifi_off</span>
+<p class="text-sm font-medium leading-normal">Proxies</p>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#243647] text-white" href="#">
+<span class="material-symbols-outlined fill-1" style="font-size: 24px;">bar_chart</span>
+<p class="text-sm font-medium leading-normal">Usage</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-surface-hover hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white" style="font-size: 24px;">credit_card</span>
+<p class="text-sm font-medium leading-normal">Billing</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-surface-hover hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-white" style="font-size: 24px;">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+</nav>
+</div>
+<div class="px-3 py-2">
+<button class="flex items-center gap-3 text-text-secondary hover:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">logout</span>
+<span class="text-sm font-medium">Log Out</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full overflow-y-auto bg-background-light dark:bg-background-dark relative">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#243647] bg-[#111a22] px-6 py-3 sticky top-0 z-10">
+<div class="flex items-center gap-4 text-white">
+<div class="md:hidden p-2 -ml-2 text-white cursor-pointer">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<div class="size-8 flex items-center justify-center text-primary">
+<svg class="w-full h-full" fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] hidden sm:block">ProxyManager</h2>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<button class="text-text-secondary hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-[#243647] mx-2"></div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all" data-alt="Small user avatar in header" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDiC5QkcPw9QK2nI_erM4dLF5FQRM4KfQ3yW-3JVlY6vjPIYzwSeanNrjOauQTqbwKPnq2-so-_fp84ImQbi8SlL3yjANXnHzd5Gju3gUdOBe4b4_XfFMR4kjVxfpC1O_ZOkDvq7qSNo1r2yK8mosF2sfLXGIfjcVWebtRBL-yHkcZ5pHKMDOGw18aRQozaGAjHBfVgsUYDoqxWW_heLblRNFS4vnn3a_HTjb91y-9XH3l-fHzQEwfmXXpc9EZ6ob8iE6R3_60_sVw");'></div>
+</div>
+</header>
+<main class="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-6 flex flex-col gap-6">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 text-sm">
+<a class="text-text-secondary hover:text-primary transition-colors font-medium" href="#">Dashboard</a>
+<span class="text-text-secondary font-medium">/</span>
+<span class="text-white font-medium">Usage &amp; Quota</span>
+</div>
+<!-- Page Heading -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="flex flex-col gap-2">
+<h1 class="text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Usage &amp; Quota</h1>
+<p class="text-text-secondary text-base font-normal">Manage your bandwidth, check limits, and view reset dates.</p>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-lg h-10 px-5 bg-primary hover:bg-primary/90 transition-colors text-white text-sm font-bold shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="truncate">Buy More Data</span>
+</button>
+</div>
+<!-- ActionPanel (Alert) -->
+<div class="w-full @container">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-5">
+<div class="flex gap-4 items-start">
+<div class="bg-yellow-500/20 p-2 rounded-lg text-yellow-500 shrink-0">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-white text-base font-bold leading-tight">Near Limit Warning</p>
+<p class="text-text-secondary text-sm md:text-base font-normal leading-normal max-w-2xl">
+                                You have used <span class="text-yellow-400 font-medium">85%</span> of your monthly quota. Upgrade your plan now to avoid service interruption when you hit 100%.
+                            </p>
+</div>
+</div>
+<button class="shrink-0 flex items-center justify-center rounded-lg h-9 px-4 bg-yellow-600 hover:bg-yellow-500 text-white text-sm font-medium transition-colors w-full sm:w-auto mt-2 sm:mt-0">
+                        Upgrade Plan
+                    </button>
+</div>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Main Quota Card (Large) -->
+<div class="lg:col-span-2 bg-[#111a22] border border-[#243647] rounded-xl p-6 flex flex-col md:flex-row gap-8 items-center md:items-start">
+<div class="flex-1 flex flex-col gap-6 w-full">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="text-text-secondary text-sm font-medium uppercase tracking-wider">Total Bandwidth</h3>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-4xl font-bold text-white">145.2</span>
+<span class="text-text-secondary text-lg">GB</span>
+<span class="text-text-secondary text-lg">/</span>
+<span class="text-text-secondary text-lg">200 GB</span>
+</div>
+</div>
+<div class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/20">
+                                ACTIVE
+                            </div>
+</div>
+<!-- Progress Bar Visual -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between text-xs text-text-secondary font-medium">
+<span>Used</span>
+<span>72.5%</span>
+</div>
+<div class="h-6 w-full bg-surface-hover rounded-full overflow-hidden relative">
+<!-- Striped pattern overlay could be added here with CSS if desired -->
+<div class="h-full bg-gradient-to-r from-primary to-blue-400 w-[72.5%] rounded-full shadow-[0_0_15px_rgba(25,127,230,0.4)]"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-2">
+<div class="bg-surface-dark p-3 rounded-lg border border-[#243647]/50">
+<div class="text-text-secondary text-xs mb-1">Upload</div>
+<div class="text-white font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm rotate-180">arrow_downward</span> 42.1 GB
+                                </div>
+</div>
+<div class="bg-surface-dark p-3 rounded-lg border border-[#243647]/50">
+<div class="text-text-secondary text-xs mb-1">Download</div>
+<div class="text-white font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_downward</span> 103.1 GB
+                                </div>
+</div>
+</div>
+</div>
+<!-- Donut Chart Visualization (CSS Only) -->
+<div class="relative size-40 shrink-0 flex items-center justify-center">
+<svg class="size-full -rotate-90" viewbox="0 0 36 36">
+<!-- Background Circle -->
+<path class="text-surface-hover" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<!-- Progress Circle -->
+<path class="text-primary drop-shadow-[0_0_4px_rgba(25,127,230,0.6)]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="72.5, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-white">
+<span class="text-xs text-text-secondary">Remaining</span>
+<span class="text-xl font-bold">54.8</span>
+<span class="text-xs text-text-secondary">GB</span>
+</div>
+</div>
+</div>
+<!-- Secondary Metrics Column -->
+<div class="flex flex-col gap-6">
+<!-- Concurrent Connections -->
+<div class="bg-[#111a22] border border-[#243647] rounded-xl p-5 flex flex-col justify-between h-full">
+<div class="flex items-start justify-between mb-4">
+<div>
+<h3 class="text-text-secondary text-sm font-medium">Concurrent Connections</h3>
+<p class="text-2xl font-bold text-white mt-1">54 <span class="text-sm font-normal text-text-secondary">/ 500</span></p>
+</div>
+<div class="bg-surface-hover p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined">share</span>
+</div>
+</div>
+<div class="w-full bg-surface-hover h-2 rounded-full overflow-hidden">
+<div class="bg-green-400 h-full w-[11%] rounded-full"></div>
+</div>
+<p class="text-xs text-text-secondary mt-2">Low load. You can run more threads.</p>
+</div>
+<!-- Reset Date -->
+<div class="bg-[#111a22] border border-[#243647] rounded-xl p-5 flex flex-col justify-between h-full">
+<div class="flex items-start justify-between">
+<div>
+<h3 class="text-text-secondary text-sm font-medium">Billing Cycle Reset</h3>
+<p class="text-2xl font-bold text-white mt-1">12 Days</p>
+<p class="text-sm text-primary mt-1">Oct 1st, 2023</p>
+</div>
+<div class="bg-surface-hover p-2 rounded-lg text-text-secondary">
+<span class="material-symbols-outlined">calendar_month</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Historical Usage Chart (Placeholder Visual) -->
+<div class="bg-[#111a22] border border-[#243647] rounded-xl p-6">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-white text-lg font-bold">Usage History</h3>
+<p class="text-text-secondary text-sm">Daily bandwidth consumption over the last 30 days</p>
+</div>
+<select class="bg-surface-hover border-none text-white text-sm rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary cursor-pointer">
+<option>Last 30 Days</option>
+<option>Last 7 Days</option>
+<option>This Month</option>
+</select>
+</div>
+<!-- Chart Visualization Construction -->
+<div class="relative h-64 w-full flex items-end justify-between gap-1 sm:gap-2 px-2 pb-6 border-b border-[#243647]">
+<!-- Y-Axis Lines (Background) -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
+<div class="w-full h-px bg-[#243647]/50 border-t border-dashed border-[#243647]"></div>
+<div class="w-full h-px bg-[#243647]/50 border-t border-dashed border-[#243647]"></div>
+<div class="w-full h-px bg-[#243647]/50 border-t border-dashed border-[#243647]"></div>
+<div class="w-full h-px bg-[#243647]/50 border-t border-dashed border-[#243647]"></div>
+<div class="w-full h-px bg-[#243647]/50 border-t border-dashed border-[#243647]"></div>
+</div>
+<!-- Bars -->
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[40%]" title="Sep 1: 4.2GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[65%]" title="Sep 2: 6.8GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[45%]" title="Sep 3: 4.7GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[30%]" title="Sep 4: 3.1GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[55%]" title="Sep 5: 5.8GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[75%] relative group" title="Sep 6: 7.9GB">
+<!-- Tooltip Example -->
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">7.9 GB</div>
+</div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[50%]" title="Sep 7: 5.2GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[60%]" title="Sep 8: 6.3GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[85%]" title="Sep 9: 8.9GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[95%]" title="Sep 10: 9.9GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[70%]" title="Sep 11: 7.3GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[60%]" title="Sep 12: 6.3GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[40%]" title="Sep 13: 4.2GB"></div>
+<div class="w-full bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm h-[35%]" title="Sep 14: 3.6GB"></div>
+</div>
+<div class="flex justify-between text-xs text-text-secondary mt-2 px-1">
+<span>Sep 1</span>
+<span>Sep 7</span>
+<span>Sep 14</span>
+</div>
+</div>
+<!-- Detailed Usage Table -->
+<div class="flex flex-col gap-4">
+<h3 class="text-white text-xl font-bold">Detailed Usage Logs</h3>
+<div class="bg-[#111a22] border border-[#243647] rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-text-secondary">
+<thead class="bg-surface-hover text-white uppercase text-xs font-semibold">
+<tr>
+<th class="px-6 py-4" scope="col">Date &amp; Time</th>
+<th class="px-6 py-4" scope="col">Zone / Proxy Type</th>
+<th class="px-6 py-4" scope="col">Target Domain</th>
+<th class="px-6 py-4 text-right" scope="col">Data Consumed</th>
+<th class="px-6 py-4 text-center" scope="col">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#243647]">
+<tr class="hover:bg-surface-hover/50 transition-colors">
+<td class="px-6 py-4 font-medium text-white">Sep 14, 10:42 AM</td>
+<td class="px-6 py-4">Residential / US-East</td>
+<td class="px-6 py-4">api.example.com</td>
+<td class="px-6 py-4 text-right font-medium text-white">45.2 MB</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400">
+                                            Success
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-hover/50 transition-colors">
+<td class="px-6 py-4 font-medium text-white">Sep 14, 10:38 AM</td>
+<td class="px-6 py-4">Datacenter / DE-Frankfurt</td>
+<td class="px-6 py-4">scrape-target.org</td>
+<td class="px-6 py-4 text-right font-medium text-white">128.5 MB</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400">
+                                            Success
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-hover/50 transition-colors">
+<td class="px-6 py-4 font-medium text-white">Sep 14, 09:15 AM</td>
+<td class="px-6 py-4">Residential / GB-London</td>
+<td class="px-6 py-4">e-commerce.net</td>
+<td class="px-6 py-4 text-right font-medium text-white">12.1 MB</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400">
+                                            Failed
+                                        </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-hover/50 transition-colors">
+<td class="px-6 py-4 font-medium text-white">Sep 14, 08:50 AM</td>
+<td class="px-6 py-4">Mobile / 4G Mix</td>
+<td class="px-6 py-4">social-media.com</td>
+<td class="px-6 py-4 text-right font-medium text-white">8.4 MB</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400">
+                                            Success
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-[#243647] flex items-center justify-between">
+<span class="text-xs text-text-secondary">Showing 4 of 1,240 records</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded bg-surface-hover text-white text-xs hover:bg-[#2f455a] transition-colors disabled:opacity-50">Previous</button>
+<button class="px-3 py-1 rounded bg-surface-hover text-white text-xs hover:bg-[#2f455a] transition-colors">Next</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Spacing -->
+<div class="h-10"></div>
+</main>
+</div>
+</div>
+</body></html>

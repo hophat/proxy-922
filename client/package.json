@@ -1,0 +1,51 @@
+{
+  "name": "proxy992-client",
+  "version": "1.0.0",
+  "description": "Windows Client for MVP Proxy Platform",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "build:win": "dotenv -e .env -- electron-builder --win",
+    "build:mac": "dotenv -e .env -- electron-builder --mac",
+    "build:all": "npm run build:win && npm run build:mac",
+    "start": "electron dist/main/main.js",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/uuid": "^9.0.7",
+    "better-sqlite3": "^12.5.0",
+    "crypto-js": "^4.2.0",
+    "electron-store": "^8.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.2",
+    "@tailwindcss/forms": "^0.5.11",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.23",
+    "concurrently": "^8.2.2",
+    "dotenv-cli": "^7.4.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^8.56.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  }
+}

@@ -1,0 +1,42 @@
+# Environment
+.env
+.env.local
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Certificates (development)
+gateway/certs/*.pem
+!gateway/certs/.gitkeep
+
+# Database
+*.db
+*.sqlite
+
+# Docker
+docker-compose.override.yml
+

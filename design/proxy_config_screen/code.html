@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Proxy Configuration</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#197fe6",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111921",
+                        "surface-dark": "#1a2632",
+                        "border-dark": "#344d65",
+                        "text-secondary": "#93adc8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111921; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #344d65; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #476685; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased min-h-screen flex flex-col">
+<div class="relative flex flex-1 w-full flex-col overflow-x-hidden">
+<!-- Header / Navigation Placeholder -->
+<header class="border-b border-gray-200 dark:border-border-dark bg-white dark:bg-background-dark/50 backdrop-blur-md sticky top-0 z-10">
+<div class="layout-container max-w-[960px] mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[20px]">vpn_lock</span>
+</div>
+<span class="font-bold text-lg tracking-tight">ProxyManager</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors">
+<span class="material-symbols-outlined text-text-secondary">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-400" data-alt="User avatar gradient"></div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="layout-container flex h-full grow flex-col">
+<div class="flex flex-1 justify-center py-8 px-4 md:px-8">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1 gap-6">
+<!-- Page Heading -->
+<div class="flex flex-wrap justify-between items-end gap-4">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<h1 class="text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Proxy Configuration</h1>
+<span class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-500 text-xs font-bold uppercase tracking-wider">Active</span>
+</div>
+<p class="text-text-secondary text-base font-normal leading-normal">Manage your connection details and credentials securely.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-dark border border-border-dark rounded-lg text-sm font-medium hover:bg-[#243647] transition-colors">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                                Logs
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                                Rotate IP
+                            </button>
+</div>
+</div>
+<!-- Tabs -->
+<div class="border-b border-border-dark">
+<div class="flex gap-8">
+<button class="group flex flex-col items-center justify-center border-b-[3px] border-primary pb-[13px] pt-4 px-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px] filled">cloud</span>
+<p class="text-white text-sm font-bold leading-normal tracking-[0.015em]">SOCKS5</p>
+</div>
+</button>
+<button class="group flex flex-col items-center justify-center border-b-[3px] border-transparent pb-[13px] pt-4 px-2 hover:border-border-dark">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-white text-[20px]">public</span>
+<p class="text-text-secondary group-hover:text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors">HTTP</p>
+</div>
+</button>
+</div>
+</div>
+<!-- Connection String Card (Full Width) -->
+<div class="rounded-xl bg-surface-dark p-1 shadow-sm border border-border-dark">
+<div class="rounded-lg bg-[#111921] p-4 flex flex-col md:flex-row md:items-center gap-4">
+<div class="flex-1 flex flex-col gap-1 min-w-0">
+<label class="text-text-secondary text-xs font-bold uppercase tracking-wider">Connection String</label>
+<p class="text-white font-mono text-sm truncate opacity-80 select-all">socks5://user_x892:••••••••@proxy.gate.io:1080</p>
+</div>
+<button class="flex shrink-0 cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white gap-2 text-sm font-medium hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+<span>Copy Link</span>
+</button>
+</div>
+</div>
+<!-- Grid Layout for Details -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Host Card -->
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-surface-dark p-5 shadow-[0_0_4px_rgba(0,0,0,0.1)] border border-transparent hover:border-border-dark transition-colors group">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]">dns</span>
+<p class="text-white text-base font-bold leading-tight">Host</p>
+</div>
+<p class="text-text-secondary text-sm font-normal leading-normal">Server address for connection</p>
+</div>
+<div class="h-8 w-8 rounded-full bg-[#243647] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-[16px]">info</span>
+</div>
+</div>
+<div class="mt-2 p-3 rounded-lg bg-[#111921] border border-border-dark flex items-center justify-between gap-3">
+<code class="text-white font-mono text-sm">proxy.gate.io</code>
+<button class="text-text-secondary hover:text-white transition-colors" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Port Card -->
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-surface-dark p-5 shadow-[0_0_4px_rgba(0,0,0,0.1)] border border-transparent hover:border-border-dark transition-colors group">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]">lan</span>
+<p class="text-white text-base font-bold leading-tight">Port</p>
+</div>
+<p class="text-text-secondary text-sm font-normal leading-normal">Communication endpoint</p>
+</div>
+</div>
+<div class="mt-2 p-3 rounded-lg bg-[#111921] border border-border-dark flex items-center justify-between gap-3">
+<code class="text-white font-mono text-sm">1080</code>
+<button class="text-text-secondary hover:text-white transition-colors" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Username Card -->
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-surface-dark p-5 shadow-[0_0_4px_rgba(0,0,0,0.1)] border border-transparent hover:border-border-dark transition-colors group">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]">person</span>
+<p class="text-white text-base font-bold leading-tight">Username</p>
+</div>
+<p class="text-text-secondary text-sm font-normal leading-normal">Your unique identifier</p>
+</div>
+</div>
+<div class="mt-2 p-3 rounded-lg bg-[#111921] border border-border-dark flex items-center justify-between gap-3">
+<code class="text-white font-mono text-sm">user_x892</code>
+<button class="text-text-secondary hover:text-white transition-colors" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Password Card -->
+<div class="flex flex-col justify-between gap-4 rounded-xl bg-surface-dark p-5 shadow-[0_0_4px_rgba(0,0,0,0.1)] border border-transparent hover:border-border-dark transition-colors group">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]">key</span>
+<p class="text-white text-base font-bold leading-tight">Password</p>
+</div>
+<p class="text-text-secondary text-sm font-normal leading-normal">Keep this confidential</p>
+</div>
+</div>
+<div class="mt-2 p-3 rounded-lg bg-[#111921] border border-border-dark flex items-center justify-between gap-3">
+<code class="text-white font-mono text-sm tracking-widest">••••••••••••</code>
+<div class="flex items-center gap-2">
+<button class="text-text-secondary hover:text-white transition-colors" title="Show Password">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<div class="w-px h-4 bg-border-dark"></div>
+<button class="text-text-secondary hover:text-white transition-colors" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions / Advanced -->
+<div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="md:col-span-2 rounded-xl bg-surface-dark p-5 border border-border-dark flex flex-col sm:flex-row items-center justify-between gap-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-white p-1 shrink-0">
+<!-- QR Code Placeholder -->
+<div class="w-full h-full bg-black flex items-center justify-center" data-alt="QR Code pattern">
+<div class="grid grid-cols-4 grid-rows-4 gap-0.5 w-full h-full p-0.5">
+<div class="bg-white col-span-2 row-span-2"></div>
+<div class="bg-white col-span-1"></div>
+<div class="bg-white col-span-1 row-span-2"></div>
+<div class="bg-white col-span-1"></div>
+<div class="bg-white col-span-2 row-span-2"></div>
+</div>
+</div>
+</div>
+<div>
+<p class="text-white font-bold text-sm">Mobile Connect</p>
+<p class="text-text-secondary text-xs">Scan to configure on mobile device</p>
+</div>
+</div>
+<button class="text-primary text-sm font-bold hover:text-blue-400 transition-colors whitespace-nowrap">
+                                Show Large QR
+                            </button>
+</div>
+<div class="rounded-xl bg-primary/10 border border-primary/20 p-5 flex flex-col justify-center items-center gap-2 text-center">
+<span class="material-symbols-outlined text-primary text-[24px]">download</span>
+<p class="text-primary font-bold text-sm">Download Config</p>
+<p class="text-primary/70 text-xs">.json, .yaml, .txt</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

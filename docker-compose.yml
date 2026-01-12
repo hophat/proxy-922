@@ -1,0 +1,116 @@
+# version: '3.8' # Removed - obsolete in newer Docker Compose
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: proxy992-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-proxyadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-proxy992}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proxyadmin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy992-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: proxy992-redis
+    ports:
+      - "${REDIS_PORT:-6371}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - proxy992-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: proxy992-backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND_PORT:-3300}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DATABASE_NAME: ${POSTGRES_DB:-proxy992}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SEPAY_API_URL: ${SEPAY_API_URL:-https://api.sepay.vn}
+      SEPAY_API_KEY: ${SEPAY_API_KEY:-GAX2CSAGEMZIPTGI53SJR7KJ4B1DTJNB8RVFEHOEKPFUUDIM8VNQQLWYZMJLX4YD}
+      SEPAY_WEBHOOK_SECRET: ${SEPAY_WEBHOOK_SECRET:-}
+      SEPAY_BANK_ACCOUNT: ${SEPAY_BANK_ACCOUNT:-}
+      SEPAY_BANK_NAME: ${SEPAY_BANK_NAME:-Vietcombank}
+      SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME:-}
+    ports:
+      - "${BACKEND_PORT:-3300}:3300"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - proxy992-network
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+      # Enable BuildKit for faster builds
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: proxy992-gateway
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT:-8080}
+      BACKEND_API_URL: http://backend:3300
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      TLS_CERT_PATH: /certs/cert.pem
+      TLS_KEY_PATH: /certs/key.pem
+      STICKY_TTL: ${STICKY_TTL:-900}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-45}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./gateway/certs:/certs
+    networks:
+      - proxy992-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  proxy992-network:
+    driver: bridge
+
+# Thay USERNAME, PASSWORD, PORT bằng giá trị từ purchase của bạn
