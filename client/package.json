@@ -19,7 +19,6 @@
   "dependencies": {
     "@types/crypto-js": "^4.2.2",
     "@types/uuid": "^9.0.7",
-    "better-sqlite3": "^12.5.0",
     "crypto-js": "^4.2.0",
     "electron-store": "^8.1.0",
     "react": "^18.2.0",
@@ -29,7 +28,6 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.2",
     "@tailwindcss/forms": "^0.5.11",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",

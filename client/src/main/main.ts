@@ -6,8 +6,8 @@ import * as upstreams from './upstreams';
 import * as payments from './payments';
 
 let mainWindow: BrowserWindow | null = null;
-// const BACKEND_URL = process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
-const BACKEND_URL = process.env.BACKEND_URL_DEV || 'http://localhost:3300';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
+// const BACKEND_URL = process.env.BACKEND_URL_DEV || 'http://localhost:3300';
 const GATEWAY_HOST = process.env.GATEWAY_HOST || '14.225.254.130';
 const GATEWAY_PORT = parseInt(process.env.GATEWAY_PORT || '8880', 10);
 
