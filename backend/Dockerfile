@@ -5,12 +5,16 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
+# Set NODE_ENV to ensure devDependencies are installed during build
+# This is needed for TypeScript compilation and drizzle-kit/drizzle-orm
+ENV NODE_ENV=development
+
 # Install dependencies with npm ci (faster and more reliable than npm install)
 # Use BuildKit cache mount for node_modules (requires DOCKER_BUILDKIT=1)
 # Syntax: --mount=type=cache,target=/root/.npm
-# Include devDependencies for TypeScript compilation
+# npm ci installs devDependencies by default unless NODE_ENV=production
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev
+    npm ci
 
 # Copy source code
 COPY . .
@@ -29,4 +33,3 @@ EXPOSE 3000
 # Use ENTRYPOINT to ensure shell script runs correctly
 # Use /entrypoint.sh (outside /app) to avoid being overridden by volume mount
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
-
