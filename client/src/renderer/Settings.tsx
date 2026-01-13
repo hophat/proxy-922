@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Sidebar } from './Sidebar';
+import { useAuthStore } from './stores';
 
 interface SystemInfo {
   hostname: string;
@@ -14,22 +16,14 @@ interface SystemInfo {
 }
 
 interface SettingsProps {
-  userEmail: string;
   onLogout: () => void;
-  onNavigateToDashboard: () => void;
-  onNavigateToProxies: () => void;
-  onNavigateToPortForwards: () => void;
-  onNavigateToPaymentHistory: () => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({
-  userEmail,
   onLogout,
-  onNavigateToDashboard,
-  onNavigateToProxies,
-  onNavigateToPortForwards,
-  onNavigateToPaymentHistory,
 }) => {
+  // Get state from stores
+  const userEmail = useAuthStore((state) => state.userEmail);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,6 +34,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [appVersion, setAppVersion] = useState<string>('');
 
   useEffect(() => {
     // Get system info from main process
@@ -53,8 +48,23 @@ export const Settings: React.FC<SettingsProps> = ({
         console.error('Failed to load system info:', err);
       }
     };
+
+    // Get app version
+    const loadAppVersion = async () => {
+      try {
+        const version = await window.electronAPI?.update?.getCurrentVersion();
+        if (version) {
+          setAppVersion(version);
+        }
+      } catch (err) {
+        console.error('Failed to load app version:', err);
+        // Fallback to package.json version if update API not available
+        setAppVersion('1.0.0');
+      }
+    };
     
     loadSystemInfo();
+    loadAppVersion();
   }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -112,59 +122,7 @@ export const Settings: React.FC<SettingsProps> = ({
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden flex h-screen w-full">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-col border-r border-[#243647] bg-[#111a22] shrink-0">
-        <div className="flex h-full flex-col justify-between p-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-3 items-center px-2 py-2">
-              <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gradient-to-br from-primary to-purple-600"></div>
-              <div className="flex flex-col">
-                <h1 className="text-white text-base font-bold leading-normal">ProxyManager</h1>
-                <p className="text-[#93adc8] text-xs font-normal leading-normal">v2.4.0</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-4">
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToDashboard}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>dashboard</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Dashboard</p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToProxies}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>router</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Proxies</p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToPortForwards}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>shopping_bag</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Đã Mua</p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToPaymentHistory}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>receipt_long</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Lịch sử thanh toán</p>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#243647] cursor-pointer hover:bg-[#2f455a] transition-colors">
-                <span className="text-white material-symbols-outlined" style={{ fontSize: '24px' }}>settings</span>
-                <p className="text-white text-sm font-medium leading-normal">Settings</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors text-[#93adc8] hover:text-red-400" onClick={onLogout}>
-            <span className="material-symbols-outlined">logout</span>
-            <p className="text-sm font-medium leading-normal">Log Out</p>
-          </div>
-        </div>
-      </aside>
+      <Sidebar onLogout={onLogout} />
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col h-full relative overflow-y-auto bg-background-light dark:bg-background-dark">
@@ -385,6 +343,51 @@ export const Settings: React.FC<SettingsProps> = ({
               ) : (
                 <div className="text-[#93adc8] text-sm">Đang tải thông tin hệ thống...</div>
               )}
+            </div>
+          </div>
+
+          {/* App Version Info Card */}
+          <div className="border border-[#344d65] rounded-xl bg-[#111a22] p-6">
+            <h3 className="text-white text-lg font-bold mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>info</span>
+              Thông tin ứng dụng
+            </h3>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-[#93adc8] text-sm font-medium min-w-[120px]">Phiên bản:</span>
+                <span className="text-white text-sm font-semibold">v{appVersion || '1.0.0'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[#93adc8] text-sm font-medium min-w-[120px]">Tên ứng dụng:</span>
+                <span className="text-white text-sm">Proxy96 Client</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[#93adc8] text-sm font-medium min-w-[120px]">Platform:</span>
+                <span className="text-white text-sm">
+                  {systemInfo ? `${systemInfo.platform} ${systemInfo.arch}` : '-'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Info Card */}
+          <div className="border border-[#344d65] rounded-xl bg-[#111a22] p-6">
+            <h3 className="text-white text-lg font-bold mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>support_agent</span>
+              Liên hệ hỗ trợ
+            </h3>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-[#93adc8] text-sm font-medium min-w-[120px]">Zalo:</span>
+                <span className="text-white text-sm font-mono">0989511431</span>
+                <button
+                  onClick={() => copyToClipboard('0989511431')}
+                  className="px-2 py-1 bg-[#243647] hover:bg-[#344d65] text-white text-xs rounded transition-colors"
+                  title="Sao chép số Zalo"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>content_copy</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

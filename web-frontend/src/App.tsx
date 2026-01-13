@@ -7,6 +7,8 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { MyPurchasesPage } from './pages/MyPurchasesPage';
 import { ProxyGuidePage } from './pages/ProxyGuidePage';
+import { UpstreamsPage } from './pages/UpstreamsPage';
+import { RotatingProxiesPage } from './pages/RotatingProxiesPage';
 
 function App() {
   return (
@@ -38,6 +40,26 @@ function App() {
               <Layout>
                 <ProxyGuidePage />
               </Layout>
+            }
+          />
+          <Route
+            path="/upstreams"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <UpstreamsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rotating-proxies"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RotatingProxiesPage />
+                </Layout>
+              </ProtectedRoute>
             }
           />
         </Routes>

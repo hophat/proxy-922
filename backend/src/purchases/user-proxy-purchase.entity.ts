@@ -15,7 +15,10 @@ import { PortMapping } from '../port-mappings/port-mappings.entity';
 
 export enum PurchaseDuration {
   HOURS_24 = '24h',
+  DAYS_1 = '1d',
+  DAYS_3 = '3d',
   DAYS_7 = '7d',
+  DAYS_15 = '15d',
   DAYS_30 = '30d',
 }
 
@@ -46,12 +49,12 @@ export class UserProxyPurchase {
   @JoinColumn({ name: 'gateway_id' })
   gateway: Gateway;
 
-  @Column({ name: 'port_id', type: 'uuid' })
-  portId: string;
+  @Column({ name: 'port_id', type: 'uuid', nullable: true })
+  portId: string | null;
 
-  @ManyToOne(() => GatewayPort)
+  @ManyToOne(() => GatewayPort, { nullable: true })
   @JoinColumn({ name: 'port_id' })
-  port: GatewayPort;
+  port: GatewayPort | null;
 
   @Column({ name: 'mapping_id', type: 'uuid' })
   mappingId: string;

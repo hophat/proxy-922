@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Sidebar } from './Sidebar';
+import { useAuthStore } from './stores';
 
 interface PaymentOrder {
   id: string;
@@ -13,22 +15,14 @@ interface PaymentOrder {
 }
 
 interface PaymentHistoryProps {
-  userEmail: string;
   onLogout: () => void;
-  onNavigateToDashboard: () => void;
-  onNavigateToProxies: () => void;
-  onNavigateToPortForwards: () => void;
-  onNavigateToSettings: () => void;
 }
 
 export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
-  userEmail,
   onLogout,
-  onNavigateToDashboard,
-  onNavigateToProxies,
-  onNavigateToPortForwards,
-  onNavigateToSettings,
 }) => {
+  // Get state from stores
+  const userEmail = useAuthStore((state) => state.userEmail);
   const [orders, setOrders] = useState<PaymentOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -118,59 +112,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden flex h-screen w-full">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-col border-r border-[#243647] bg-[#111a22] shrink-0">
-        <div className="flex h-full flex-col justify-between p-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-3 items-center px-2 py-2">
-              <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gradient-to-br from-primary to-purple-600"></div>
-              <div className="flex flex-col">
-                <h1 className="text-white text-base font-bold leading-normal">ProxyManager</h1>
-                <p className="text-[#93adc8] text-xs font-normal leading-normal">v2.4.0</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-4">
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToDashboard}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>dashboard</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Dashboard</p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToProxies}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>router</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Proxies</p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToPortForwards}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>shopping_bag</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Đã Mua</p>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#243647] cursor-pointer hover:bg-[#2f455a] transition-colors">
-                <span className="text-white material-symbols-outlined" style={{ fontSize: '24px' }}>receipt_long</span>
-                <p className="text-white text-sm font-medium leading-normal">Lịch sử thanh toán</p>
-              </div>
-              <div 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={() => onNavigateToSettings?.()}
-              >
-                <span className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined" style={{ fontSize: '24px' }}>settings</span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">Settings</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors text-[#93adc8] hover:text-red-400" onClick={onLogout}>
-            <span className="material-symbols-outlined">logout</span>
-            <p className="text-sm font-medium leading-normal">Log Out</p>
-          </div>
-        </div>
-      </aside>
+      <Sidebar onLogout={onLogout} />
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col h-full relative overflow-y-auto bg-background-light dark:bg-background-dark">

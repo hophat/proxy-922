@@ -21,7 +21,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="text-xl font-bold text-white">
-              Proxy992
+              Proxy96
             </Link>
 
             <nav className="flex items-center gap-6">
@@ -34,6 +34,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
               {isAuthenticated ? (
                 <>
+                  <Link
+                    to="/upstreams"
+                    className="text-gray-300 hover:text-white transition-colors"
+                  >
+                    Upstreams
+                  </Link>
                   <Link
                     to="/purchases"
                     className="text-gray-300 hover:text-white transition-colors"

@@ -37,10 +37,24 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegister, error }) => {
         <div className="w-full max-w-[480px] flex flex-col gap-6">
           {/* Logo Section */}
           <div className="flex flex-col items-center justify-center pb-2">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
-              <span className="material-symbols-outlined text-white text-[32px]">shield_lock</span>
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-xl overflow-hidden shadow-lg">
+              <img 
+                src="/logo.png" 
+                alt="Proxy96 Logo" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  // Fallback to icon if logo not found
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = '<span class="material-symbols-outlined text-white text-[32px]">shield_lock</span>';
+                    parent.className = 'mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30';
+                  }
+                }}
+              />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">ProxyControl</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">Proxy96</h1>
             <p className="mt-2 text-base font-normal text-slate-500 dark:text-text-muted text-center max-w-xs">
               Truy cập an toàn vào hệ thống mạng phân tán của bạn
             </p>

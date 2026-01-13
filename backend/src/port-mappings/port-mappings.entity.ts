@@ -33,12 +33,12 @@ export class PortMapping {
   @JoinColumn({ name: 'gateway_id' })
   gateway: Gateway;
 
-  @Column({ name: 'port_id', type: 'uuid' })
-  portId: string;
+  @Column({ name: 'port_id', type: 'uuid', nullable: true })
+  portId: string | null;
 
-  @ManyToOne(() => GatewayPort)
+  @ManyToOne(() => GatewayPort, { nullable: true })
   @JoinColumn({ name: 'port_id' })
-  gatewayPort: GatewayPort;
+  gatewayPort: GatewayPort | null;
 
   @Column({ type: 'int' })
   port: number;

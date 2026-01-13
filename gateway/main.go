@@ -12,12 +12,12 @@ import (
 	"syscall"
 	"time"
 
-	"proxy992-gateway/internal/auth"
-	"proxy992-gateway/internal/config"
-	"proxy992-gateway/internal/health"
-	"proxy992-gateway/internal/proxy"
-	"proxy992-gateway/internal/session"
-	"proxy992-gateway/internal/traffic"
+	"Proxy96-gateway/internal/auth"
+	"Proxy96-gateway/internal/config"
+	"Proxy96-gateway/internal/health"
+	"Proxy96-gateway/internal/proxy"
+	"Proxy96-gateway/internal/session"
+	"Proxy96-gateway/internal/traffic"
 )
 
 // bufferedConn wraps a connection with a buffer for already-read data

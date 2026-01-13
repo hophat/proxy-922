@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1735674000000,
+      "tag": "0000_add_port_to_rotating_proxy_purchases",
+      "breakpoints": true
+    }
+  ]
+}

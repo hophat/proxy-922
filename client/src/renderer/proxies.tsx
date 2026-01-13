@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UpstreamPurchaseDialog } from './UpstreamPurchaseDialog';
+import { QuickPortSelectPopover } from './QuickPortSelectPopover';
+import { Sidebar } from './Sidebar';
+import { useAuthStore } from './stores';
 
 interface PublicUpstream {
   id: string;
@@ -15,15 +18,12 @@ interface PublicUpstream {
 }
 
 interface ProxiesProps {
-  userEmail: string;
   onLogout: () => void;
-  onNavigateToDashboard: () => void;
-  onNavigateToPortForwards: () => void;
-  onNavigateToPaymentHistory: () => void;
-  onNavigateToSettings: () => void;
 }
 
-export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigateToDashboard, onNavigateToPortForwards, onNavigateToPaymentHistory, onNavigateToSettings }) => {
+export const Proxies: React.FC<ProxiesProps> = ({ onLogout }) => {
+  // Get state from stores
+  const userEmail = useAuthStore((state) => state.userEmail);
   const [showSidebar, setShowSidebar] = useState(true);
   const [upstreams, setUpstreams] = useState<PublicUpstream[]>([]);
   const [displayedUpstreams, setDisplayedUpstreams] = useState<PublicUpstream[]>([]);
@@ -32,6 +32,16 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20; // 20 items per page for list view
+  const [quickPortPopover, setQuickPortPopover] = useState<{
+    open: boolean;
+    position: { x: number; y: number };
+    upstream: PublicUpstream | null;
+  }>({
+    open: false,
+    position: { x: 0, y: 0 },
+    upstream: null,
+  });
+  const [preSelectedPorts, setPreSelectedPorts] = useState<number[]>([]);
 
   useEffect(() => {
     loadUpstreams();
@@ -88,7 +98,28 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
   const handlePurchaseSuccess = () => {
     setShowPurchaseDialog(false);
     setSelectedUpstreams(new Set());
+    setPreSelectedPorts([]);
     loadUpstreams();
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, upstream: PublicUpstream) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickPortPopover({
+      open: true,
+      position: { x: e.clientX, y: e.clientY },
+      upstream,
+    });
+  };
+
+  const handleQuickPortSelect = (port: number) => {
+    if (!quickPortPopover.upstream) return;
+
+    // Set selected upstream và port
+    setSelectedUpstreams(new Set([quickPortPopover.upstream.id]));
+    setPreSelectedPorts([port]);
+    setShowPurchaseDialog(true);
+    setQuickPortPopover({ open: false, position: { x: 0, y: 0 }, upstream: null });
   };
 
   const selectedUpstreamsList = upstreams.filter((u) => selectedUpstreams.has(u.id));
@@ -96,106 +127,9 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden flex h-screen w-full">
       {/* Sidebar */}
-      <aside
-        className={`${showSidebar ? 'flex' : 'hidden'} md:flex w-64 flex-col border-r border-[#243647] bg-[#111a22] shrink-0`}
-      >
-        <div className="flex h-full flex-col justify-between p-4">
-          <div className="flex flex-col gap-4">
-            {/* Brand / Profile Snippet */}
-            <div className="flex gap-3 items-center px-2 py-2">
-              <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gradient-to-br from-primary to-purple-600"></div>
-              <div className="flex flex-col">
-                <h1 className="text-white text-base font-bold leading-normal">
-                  ProxyManager
-                </h1>
-                <p className="text-[#93adc8] text-xs font-normal leading-normal">
-                  v2.4.0
-                </p>
-              </div>
-            </div>
-
-            {/* Nav Items */}
-            <div className="flex flex-col gap-2 mt-4">
-              <div 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToDashboard}
-              >
-                <span
-                  className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
-                  style={{ fontSize: '24px' }}
-                >
-                  dashboard
-                </span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">
-                  Dashboard
-                </p>
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#243647] cursor-pointer hover:bg-[#2f455a] transition-colors">
-                <span
-                  className="text-white material-symbols-outlined"
-                  style={{ fontSize: '24px' }}
-                >
-                  router
-                </span>
-                <p className="text-white text-sm font-medium leading-normal">
-                  Proxies
-                </p>
-              </div>
-              <div
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToPortForwards}
-              >
-                <span
-                  className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
-                  style={{ fontSize: '24px' }}
-                >
-                  shopping_bag
-                </span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">
-                  Đã Mua
-                </p>
-              </div>
-              <div 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={onNavigateToPaymentHistory}
-              >
-                <span
-                  className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
-                  style={{ fontSize: '24px' }}
-                >
-                  receipt_long
-                </span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">
-                  Lịch sử thanh toán
-                </p>
-              </div>
-              <div 
-                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors group"
-                onClick={() => onNavigateToSettings?.()}
-              >
-                <span
-                  className="text-[#93adc8] group-hover:text-white transition-colors material-symbols-outlined"
-                  style={{ fontSize: '24px' }}
-                >
-                  settings
-                </span>
-                <p className="text-[#93adc8] group-hover:text-white transition-colors text-sm font-medium leading-normal">
-                  Settings
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Action */}
-          <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-[#1a2632] transition-colors text-[#93adc8] hover:text-red-400"
-            onClick={onLogout}
-          >
-            <span className="material-symbols-outlined">logout</span>
-            <p className="text-sm font-medium leading-normal">Log Out</p>
-          </div>
-        </div>
-      </aside>
+      <div className={`${showSidebar ? 'flex' : 'hidden'} md:flex`}>
+        <Sidebar onLogout={onLogout} />
+      </div>
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col h-full relative overflow-y-auto bg-background-light dark:bg-background-dark">
@@ -320,6 +254,7 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
                               : 'hover:bg-[#1a2632]/50'
                           }`}
                           onClick={() => handleToggleUpstream(upstream.id)}
+                          onContextMenu={(e) => handleContextMenu(e, upstream)}
                         >
                           <td className="px-4 py-3">
                             <input
@@ -475,8 +410,23 @@ export const Proxies: React.FC<ProxiesProps> = ({ userEmail, onLogout, onNavigat
         open={showPurchaseDialog}
         onOpenChange={setShowPurchaseDialog}
         onSuccess={handlePurchaseSuccess}
-        onClose={() => setShowPurchaseDialog(false)}
+        onClose={() => {
+          setShowPurchaseDialog(false);
+          setPreSelectedPorts([]);
+        }}
+        preSelectedPorts={preSelectedPorts}
       />
+
+      {quickPortPopover.upstream && (
+        <QuickPortSelectPopover
+          open={quickPortPopover.open}
+          onClose={() => setQuickPortPopover({ open: false, position: { x: 0, y: 0 }, upstream: null })}
+          position={quickPortPopover.position}
+          onSelectPort={handleQuickPortSelect}
+          upstreamId={quickPortPopover.upstream.id}
+          upstreamHost={`${quickPortPopover.upstream.host}:${quickPortPopover.upstream.port}`}
+        />
+      )}
     </div>
   );
 };

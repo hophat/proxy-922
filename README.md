@@ -134,7 +134,7 @@ export DATABASE_HOST=localhost
 export DATABASE_PORT=5432
 export DATABASE_USER=proxyadmin
 export DATABASE_PASSWORD=changeme
-export DATABASE_NAME=proxy992
+export DATABASE_NAME=Proxy96
 
 # Hoặc tạo file .env trong backend/
 npm run start:dev
@@ -159,7 +159,7 @@ npm run dev
 ## Cấu trúc Project
 
 ```
-proxy992/
+Proxy96/
 ├── gateway/          # Go Proxy Gateway
 ├── backend/          # NestJS Backend API
 ├── client/           # Electron Windows Client
@@ -269,8 +269,8 @@ Lỗi này xảy ra khi:
    
    # Tạo user và database
    CREATE USER proxyadmin WITH PASSWORD 'changeme';
-   CREATE DATABASE proxy992 OWNER proxyadmin;
-   GRANT ALL PRIVILEGES ON DATABASE proxy992 TO proxyadmin;
+   CREATE DATABASE Proxy96 OWNER proxyadmin;
+   GRANT ALL PRIVILEGES ON DATABASE Proxy96 TO proxyadmin;
    \q
    ```
    
@@ -288,14 +288,14 @@ Lỗi này xảy ra khi:
    
    # Hoặc thủ công:
    docker-compose down
-   docker volume rm proxy992_postgres_data
+   docker volume rm Proxy96_postgres_data
    docker-compose up -d
    ```
 
 3. **Tạo user thủ công trong PostgreSQL container:**
    ```bash
    # Vào PostgreSQL container
-   docker exec -it proxy992-postgres psql -U proxyadmin -d proxy992
+   docker exec -it Proxy96-postgres psql -U proxyadmin -d Proxy96
    
    # Kiểm tra user đã tồn tại
    \du
@@ -305,7 +305,7 @@ Lỗi này xảy ra khi:
    - Đảm bảo PostgreSQL đã start và healthy: `docker-compose ps postgres`
    - Kiểm tra credentials trong `.env` khớp với docker-compose
    - Xem logs: `docker-compose logs postgres`
-   - Test kết nối: `docker exec proxy992-postgres psql -U proxyadmin -d proxy992 -c "SELECT 1;"`
+   - Test kết nối: `docker exec Proxy96-postgres psql -U proxyadmin -d Proxy96 -c "SELECT 1;"`
 
 #### Các lỗi database khác
 - Đảm bảo PostgreSQL đã start và healthy
@@ -410,7 +410,7 @@ Lỗi này có thể xảy ra khi:
 3. **Kiểm tra database có user:**
    ```bash
    # Vào PostgreSQL
-   docker-compose exec postgres psql -U proxyadmin -d proxy992
+   docker-compose exec postgres psql -U proxyadmin -d Proxy96
    
    # Kiểm tra users
    SELECT email, active FROM users;

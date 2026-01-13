@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PaymentDialog } from './PaymentDialog';
+import { PortSelection } from './PortSelection';
 
 interface PublicUpstream {
   id: string;
@@ -30,6 +31,7 @@ interface UpstreamPurchaseDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   onClose: () => void;
+  preSelectedPorts?: number[]; // Optional: Ports đã được chọn trước (từ quick select)
 }
 
 type PurchaseDuration = '24h' | '7d' | '30d';
@@ -40,9 +42,11 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
   onOpenChange,
   onSuccess,
   onClose,
+  preSelectedPorts = [],
 }) => {
   const [duration, setDuration] = useState<PurchaseDuration>('24h');
   const [gatewayId, setGatewayId] = useState<string>('');
+  const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [paymentOrder, setPaymentOrder] = useState<PaymentOrder | null>(null);
@@ -54,15 +58,30 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
       // For now, we'll use empty string and let backend auto-select
       setGatewayId('');
       setDuration('24h');
+      // Nếu có preSelectedPorts, sử dụng nó; nếu không thì reset
+      if (preSelectedPorts.length > 0) {
+        setSelectedPorts([...preSelectedPorts]);
+      } else {
+        setSelectedPorts([]);
+      }
       setError(undefined);
       setPaymentOrder(null);
       setShowPaymentDialog(false);
     }
-  }, [open]);
+  }, [open, preSelectedPorts]);
+
+  // Reset selected ports when upstream selection changes (chỉ khi không có preSelectedPorts)
+  // Loại bỏ useEffect này vì nó đang gây conflict với preSelectedPorts
+  // Logic reset đã được xử lý trong useEffect đầu tiên
 
   const handlePurchase = async () => {
     if (upstreams.length === 0) {
       setError('Vui lòng chọn ít nhất một proxy');
+      return;
+    }
+
+    if (selectedPorts.length !== upstreams.length) {
+      setError(`Vui lòng chọn đúng ${upstreams.length} port (mỗi proxy cần 1 port)`);
       return;
     }
 
@@ -77,6 +96,7 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
         upstreamIds,
         gatewayId: gatewayId || undefined, // Let backend auto-select if empty
         duration,
+        selectedPorts: selectedPorts.length > 0 ? selectedPorts : undefined,
       });
 
       if (order) {
@@ -159,7 +179,7 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
 
       {/* Purchase Dialog - ẩn khi có PaymentDialog */}
       <div className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 ${showPaymentDialog ? 'hidden' : ''}`}>
-        <div className="bg-[#1a2632] border border-[#344d65] rounded-xl p-6 w-full max-w-md">
+        <div className="bg-[#1a2632] border border-[#344d65] rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
           <h2 className="text-xl font-bold text-white mb-4">Mua Proxy</h2>
 
           <div className="mb-4">
@@ -205,6 +225,18 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
               </table>
             </div>
           </div>
+
+          {/* Port Selection */}
+          {upstreams.length > 0 && (
+            <div className="mb-4">
+              <PortSelection
+                selectedPorts={selectedPorts}
+                onPortsChange={setSelectedPorts}
+                requiredCount={upstreams.length}
+                disabled={loading}
+              />
+            </div>
+          )}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-[#93adc8] mb-2">
@@ -252,7 +284,7 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
             <button
               onClick={handlePurchase}
               className="flex-1 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
-              disabled={loading}
+              disabled={loading || selectedPorts.length !== upstreams.length}
             >
               {loading ? 'Đang xử lý...' : 'Mua ngay'}
             </button>

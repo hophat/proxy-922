@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"proxy992-gateway/internal/session"
+	"Proxy96-gateway/internal/session"
 )
 
 type UserInfo struct {
@@ -16,9 +16,9 @@ type UserInfo struct {
 }
 
 type Validator struct {
-	backendURL string
+	backendURL   string
 	sessionStore session.Store
-	httpClient *http.Client
+	httpClient   *http.Client
 }
 
 func NewValidator(backendURL string, sessionStore session.Store) *Validator {
@@ -120,4 +120,3 @@ func (v *Validator) CheckQuota(userID string) (bool, error) {
 
 	return result.HasQuota, nil
 }
-

@@ -1,4 +1,4 @@
-module proxy992-gateway
+module Proxy96-gateway
 
 go 1.21
 

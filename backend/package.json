@@ -1,5 +1,5 @@
 {
-  "name": "proxy992-backend",
+  "name": "Proxy96-backend",
   "version": "1.0.0",
   "description": "Backend API for MVP Proxy Platform",
   "author": "",
@@ -30,7 +30,13 @@
     "import:proxies": "ts-node src/database/import-proxies.ts",
     "import:upstreams": "ts-node src/database/import-upstreams.ts",
     "update:passwords": "ts-node src/database/update-proxy-passwords.ts",
-    "migrate:from-old-db": "ts-node src/database/migrate-from-old-db.ts"
+    "migrate:from-old-db": "ts-node src/database/migrate-from-old-db.ts",
+    "drizzle:generate": "drizzle-kit generate",
+    "drizzle:migrate": "ts-node src/database/drizzle/migrate.ts",
+    "drizzle:push": "drizzle-kit push",
+    "drizzle:studio": "drizzle-kit studio",
+    "drizzle:add-port": "ts-node src/database/drizzle/add-port-column.ts",
+    "drizzle:verify-port": "ts-node src/database/drizzle/verify-port-column.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
@@ -66,6 +72,8 @@
     "@types/passport-jwt": "^4.0.1",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
+    "drizzle-kit": "^0.31.8",
+    "drizzle-orm": "^0.45.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.2",

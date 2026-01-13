@@ -17,7 +17,7 @@ echo "📦 Stopping services..."
 $DOCKER_COMPOSE down
 
 echo "🗑️  Removing PostgreSQL volume..."
-docker volume rm proxy992_postgres_data 2>/dev/null || echo "Volume không tồn tại, tiếp tục..."
+docker volume rm Proxy96_postgres_data 2>/dev/null || echo "Volume không tồn tại, tiếp tục..."
 
 echo "🚀 Starting services..."
 $DOCKER_COMPOSE up -d postgres
@@ -27,7 +27,7 @@ sleep 5
 
 # Wait for PostgreSQL to be healthy
 for i in {1..30}; do
-  if docker exec proxy992-postgres pg_isready -U proxyadmin > /dev/null 2>&1; then
+  if docker exec Proxy96-postgres pg_isready -U proxyadmin > /dev/null 2>&1; then
     echo "✅ PostgreSQL is ready"
     break
   fi

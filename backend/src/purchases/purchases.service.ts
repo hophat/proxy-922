@@ -14,6 +14,8 @@ import { Socks5Upstream, UpstreamStatus } from '../socks5-upstream/socks5-upstre
 import { GatewaysService } from '../gateways/gateways.service';
 import { GatewayPortsService } from '../gateway-ports/gateway-ports.service';
 import { Socks5UpstreamService } from '../socks5-upstream/socks5-upstream.service';
+import { PortChangeHistoryService } from '../port-change-history/port-change-history.service';
+import { PortChangeType, PortChangeHistory } from '../port-change-history/port-change-history.entity';
 import * as crypto from 'crypto';
 
 export interface CreatePurchaseDto {
@@ -24,8 +26,9 @@ export interface CreatePurchaseDto {
 
 export interface CreateUpstreamPurchaseDto {
   upstreamIds: string[]; // Array of upstream IDs
-  gatewayId: string; // Gateway ID (có thể tự động lấy nếu chỉ có 1 gateway)
+  gatewayId?: string; // Gateway ID (optional, sẽ tự động xác định từ port nếu có selectedPorts)
   duration: PurchaseDuration;
+  selectedPorts?: number[]; // Optional: Array of port numbers (4000-10000) mà user chọn. Nếu có, gateway sẽ được tự động xác định từ port
 }
 
 export interface PurchaseResponse {
@@ -65,6 +68,7 @@ export class PurchasesService {
     private gatewaysService: GatewaysService,
     private gatewayPortsService: GatewayPortsService,
     private upstreamService: Socks5UpstreamService,
+    private portChangeHistoryService: PortChangeHistoryService,
     private dataSource: DataSource,
   ) {}
 
@@ -278,7 +282,7 @@ export class PurchasesService {
           mappingId: mapping.id,
           gatewayIp: mapping.gateway.ip,
           gatewayPort: 8080, // Gateway port is fixed
-          localPort: mapping.port, // Use port from mapping as localPort (10000-20000 range)
+          localPort: mapping.port, // Use port from mapping as localPort (4000-10000 range)
           username: credentials.username,
           password: credentials.password,
           upstreamId: mapping.upstream.id,
@@ -289,6 +293,225 @@ export class PurchasesService {
         };
       }),
     };
+  }
+
+  /**
+   * Đổi port của port mapping đang sử dụng (giữ nguyên gateway)
+   * Không phụ thuộc vào GatewayPort entity - chỉ validate port number và check duplicate
+   */
+  async changePortMappingPort(
+    mappingId: string,
+    newPort: number,
+    userId: string,
+  ): Promise<PortMapping> {
+    // Tìm port mapping
+    const mapping = await this.portMappingRepository.findOne({
+      where: { id: mappingId, userId },
+      relations: ['gateway'],
+    });
+
+    if (!mapping) {
+      throw new NotFoundException('Port mapping not found');
+    }
+
+    // Validate port range (4000-10000)
+    if (newPort < 4000 || newPort > 10000) {
+      throw new BadRequestException('Port must be between 4000 and 10000');
+    }
+
+    // Kiểm tra port đã được sử dụng trong gateway này chưa (trừ port hiện tại)
+    this.logger.log(`[ChangePort] Checking if port ${newPort} is already used in gateway ${mapping.gatewayId}`);
+    const existingMapping = await this.portMappingRepository.findOne({
+      where: {
+        gatewayId: mapping.gatewayId,
+        port: newPort,
+        status: PortMappingStatus.ACTIVE,
+      },
+    });
+
+    if (existingMapping && existingMapping.id !== mappingId) {
+      this.logger.warn(`[ChangePort] Port ${newPort} is already used by mapping ${existingMapping.id}`);
+      throw new BadRequestException(
+        `Port ${newPort} đã được sử dụng trong gateway hiện tại. Vui lòng chọn port khác.`,
+      );
+    }
+    this.logger.log(`[ChangePort] Port ${newPort} is available`);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const oldPortNumber = mapping.port;
+
+      this.logger.log(`[ChangePort] Starting transaction for mapping ${mappingId}, changing port from ${oldPortNumber} to ${newPort}`);
+
+      // Load relations trong transaction để tránh phải reload sau
+      const mappingWithRelations = await queryRunner.manager.findOne(PortMapping, {
+        where: { id: mappingId },
+        relations: ['gateway', 'upstream'],
+      });
+
+      if (!mappingWithRelations) {
+        throw new NotFoundException('Port mapping not found');
+      }
+
+      // Update mapping - chỉ cần update port number
+      mappingWithRelations.port = newPort;
+      const updatedMapping = await queryRunner.manager.save(mappingWithRelations);
+      this.logger.log(`[ChangePort] Updated mapping port to ${newPort}`);
+
+      // Record change history - sử dụng queryRunner.manager để tránh deadlock
+      const changeHistory = queryRunner.manager.create(PortChangeHistory, {
+        userId,
+        gatewayId: mapping.gatewayId,
+        portMappingId: mappingId,
+        oldPort: oldPortNumber,
+        newPort,
+        oldGatewayId: null,
+        newGatewayId: null,
+        changeType: PortChangeType.PORT_CHANGE,
+        changedAt: new Date(),
+      });
+      await queryRunner.manager.save(changeHistory);
+      this.logger.log(`[ChangePort] Recorded port change history`);
+
+      await queryRunner.commitTransaction();
+      this.logger.log(`[ChangePort] Transaction committed successfully`);
+
+      // Trả về mapping đã được update với relations đã load
+      return updatedMapping;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Failed to change port for port mapping: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Đổi gateway IP của port mapping đang sử dụng
+   */
+  async changePortMappingGateway(
+    mappingId: string,
+    newGatewayId: string,
+    userId: string,
+  ): Promise<PortMapping> {
+    // Tìm port mapping
+    const mapping = await this.portMappingRepository.findOne({
+      where: { id: mappingId, userId },
+      relations: ['gateway', 'gatewayPort'],
+    });
+
+    if (!mapping) {
+      throw new NotFoundException('Port mapping not found');
+    }
+
+    if (mapping.status !== PortMappingStatus.ACTIVE) {
+      throw new BadRequestException('Port mapping is not active');
+    }
+
+    // Validate new gateway
+    const newGateway = await this.gatewaysService.findById(newGatewayId);
+    if (!newGateway) {
+      throw new NotFoundException('New gateway not found');
+    }
+
+    if (newGateway.status !== GatewayStatus.ACTIVE) {
+      throw new BadRequestException('New gateway is not active');
+    }
+
+    // Tìm port tương ứng trong gateway mới (cùng port number)
+    const newPort = await this.gatewayPortsService.findPortByNumber(newGatewayId, mapping.port);
+
+    if (!newPort || newPort.status !== GatewayPortStatus.AVAILABLE) {
+      throw new BadRequestException(
+        `Port ${mapping.port} không available trong gateway mới`,
+      );
+    }
+
+    // Use transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const oldGatewayId = mapping.gatewayId;
+      const oldPortId = mapping.portId;
+
+      // Release old port
+      const oldPort = await queryRunner.manager.findOne(GatewayPort, {
+        where: { id: oldPortId },
+      });
+      if (oldPort) {
+        oldPort.status = GatewayPortStatus.AVAILABLE;
+        await queryRunner.manager.save(oldPort);
+      }
+
+      // Reserve new port
+      newPort.status = GatewayPortStatus.RESERVED;
+      await queryRunner.manager.save(newPort);
+
+      // Update mapping
+      mapping.gatewayId = newGatewayId;
+      mapping.portId = newPort.id;
+      const updatedMapping = await queryRunner.manager.save(mapping);
+
+      // Assign new port
+      newPort.status = GatewayPortStatus.ASSIGNED;
+      await queryRunner.manager.save(newPort);
+
+      // Update purchase records
+      const purchases = await queryRunner.manager.find(UserProxyPurchase, {
+        where: { mappingId },
+      });
+
+      // Generate new credentials cho gateway mới
+      const newCredentials = this.generateCredentials(userId, newGatewayId);
+
+      for (const purchase of purchases) {
+        purchase.gatewayId = newGatewayId;
+        purchase.portId = newPort.id;
+        purchase.gatewayUsername = newCredentials.username;
+        purchase.gatewayPassword = newCredentials.password;
+        await queryRunner.manager.save(purchase);
+      }
+
+      // Record change history - use queryRunner to ensure it's in the same transaction
+      const changeHistory = queryRunner.manager.create(PortChangeHistory, {
+        userId,
+        gatewayId: newGatewayId,
+        portMappingId: mappingId,
+        oldGatewayId,
+        newGatewayId,
+        oldPort: null,
+        newPort: null,
+        changeType: PortChangeType.GATEWAY_CHANGE,
+        changedAt: new Date(),
+      });
+      await queryRunner.manager.save(changeHistory);
+
+      await queryRunner.commitTransaction();
+
+      // Reload với relations
+      return this.portMappingRepository.findOne({
+        where: { id: mappingId },
+        relations: ['gateway', 'upstream', 'gatewayPort'],
+      }) as Promise<PortMapping>;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Failed to change gateway for port mapping: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   private calculateExpirationDate(duration: PurchaseDuration): Date {
@@ -357,22 +580,20 @@ export class PurchasesService {
       throw new BadRequestException('Invalid duration');
     }
 
-    // Get gateway
-    let gateway: Gateway;
-    if (createDto.gatewayId) {
-      gateway = await this.gatewaysService.findById(createDto.gatewayId);
-    } else {
-      // Auto-select first active gateway
-      const gateways = await this.gatewaysService.findAll();
-      const activeGateways = gateways.filter((g) => g.status === GatewayStatus.ACTIVE);
-      if (activeGateways.length === 0) {
-        throw new NotFoundException('No active gateway found');
+    // Validate selectedPorts nếu có
+    if (createDto.selectedPorts) {
+      if (createDto.selectedPorts.length !== createDto.upstreamIds.length) {
+        throw new BadRequestException(
+          `Số lượng port phải bằng số lượng upstream. Port: ${createDto.selectedPorts.length}, Upstream: ${createDto.upstreamIds.length}`,
+        );
       }
-      gateway = activeGateways[0];
-    }
 
-    if (gateway.status !== GatewayStatus.ACTIVE) {
-      throw new BadRequestException('Gateway is not active');
+      // Validate port range 4000-10000
+      for (const port of createDto.selectedPorts) {
+        if (port < 4000 || port > 10000) {
+          throw new BadRequestException(`Port ${port} phải trong range 4000-10000`);
+        }
+      }
     }
 
     // Validate and get upstreams
@@ -394,58 +615,139 @@ export class PurchasesService {
       upstreams.push(upstream);
     }
 
-    // Find available ports
-    const availablePorts = await this.gatewayPortsService.findAvailable(gateway.id);
-
-    if (availablePorts.length < createDto.upstreamIds.length) {
-      throw new BadRequestException(
-        `Not enough available ports. Available: ${availablePorts.length}, Requested: ${createDto.upstreamIds.length}`,
-      );
-    }
-
-    // Calculate expiration date
-    const expiresAt = this.calculateExpirationDate(createDto.duration);
-
-    // Generate credentials (same for all ports in one purchase)
-    const credentials = this.generateCredentials(userId, gateway.id);
-
     // Use transaction to ensure atomicity
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Reserve ports
-      const selectedPorts = availablePorts.slice(0, createDto.upstreamIds.length);
-      const reservedPorts: GatewayPort[] = [];
+      let reservedPorts: GatewayPort[] = [];
+      let gateway: Gateway;
 
-      for (const port of selectedPorts) {
-        const reservedPort = await queryRunner.manager.findOne(GatewayPort, {
-          where: { id: port.id },
-        });
-
-        if (!reservedPort || reservedPort.status !== GatewayPortStatus.AVAILABLE) {
-          throw new BadRequestException(`Port ${port.port} is no longer available`);
+      if (createDto.selectedPorts) {
+        // User đã chọn port cụ thể
+        // Cần gatewayId để assign port (nếu không có, tự động chọn gateway đầu tiên)
+        if (createDto.gatewayId) {
+          gateway = await this.gatewaysService.findById(createDto.gatewayId);
+        } else {
+          // Auto-select first active gateway
+          const gateways = await this.gatewaysService.findAll();
+          const activeGateways = gateways.filter((g) => g.status === GatewayStatus.ACTIVE);
+          if (activeGateways.length === 0) {
+            throw new NotFoundException('No active gateway found');
+          }
+          gateway = activeGateways[0];
         }
 
-        reservedPort.status = GatewayPortStatus.RESERVED;
-        await queryRunner.manager.save(reservedPort);
-        reservedPorts.push(reservedPort);
+        if (gateway.status !== GatewayStatus.ACTIVE) {
+          throw new BadRequestException('Gateway is not active');
+        }
+
+        // Validate ports không bị duplicate trong gateway này
+        for (const portNumber of createDto.selectedPorts) {
+          const existingMapping = await this.portMappingRepository.findOne({
+            where: {
+              gatewayId: gateway.id,
+              port: portNumber,
+              status: PortMappingStatus.ACTIVE,
+            },
+          });
+
+          if (existingMapping) {
+            throw new BadRequestException(
+              `Port ${portNumber} đã được sử dụng trong gateway ${gateway.ip}. Vui lòng chọn port khác.`,
+            );
+          }
+        }
+
+        // Không cần reserve GatewayPort nữa - chỉ cần validate
+        reservedPorts = [];
+      } else {
+        // Auto-assign gateway và port
+        if (createDto.gatewayId) {
+          gateway = await this.gatewaysService.findById(createDto.gatewayId);
+        } else {
+          // Auto-select first active gateway
+          const gateways = await this.gatewaysService.findAll();
+          const activeGateways = gateways.filter((g) => g.status === GatewayStatus.ACTIVE);
+          if (activeGateways.length === 0) {
+            throw new NotFoundException('No active gateway found');
+          }
+          gateway = activeGateways[0];
+        }
+
+        if (gateway.status !== GatewayStatus.ACTIVE) {
+          throw new BadRequestException('Gateway is not active');
+        }
+
+        // Tìm port available trong gateway (không bị sử dụng)
+        const existingMappings = await this.portMappingRepository.find({
+          where: {
+            gatewayId: gateway.id,
+            status: PortMappingStatus.ACTIVE,
+          },
+          select: ['port'],
+        });
+
+        const usedPorts = new Set(existingMappings.map((m) => m.port));
+        const availablePorts: number[] = [];
+
+        // Tìm port từ 4000-10000 chưa được sử dụng
+        for (let port = 4000; port <= 10000 && availablePorts.length < createDto.upstreamIds.length; port++) {
+          if (!usedPorts.has(port)) {
+            availablePorts.push(port);
+          }
+        }
+
+        if (availablePorts.length < createDto.upstreamIds.length) {
+          throw new BadRequestException(
+            `Not enough available ports in gateway. Available: ${availablePorts.length}, Requested: ${createDto.upstreamIds.length}`,
+          );
+        }
+
+        // Không cần reserve GatewayPort nữa - chỉ cần port numbers
+        reservedPorts = [];
       }
+
+      // Calculate expiration date
+      const expiresAt = this.calculateExpirationDate(createDto.duration);
 
       // Create port mappings and purchases
       const portMappings: PortMapping[] = [];
       const purchases: UserProxyPurchase[] = [];
 
+      // Generate credentials cho gateway
+      const credentials = this.generateCredentials(userId, gateway.id);
+
+      // Xác định port numbers
+      const portNumbers: number[] = createDto.selectedPorts || [];
+      if (portNumbers.length === 0) {
+        // Auto-assign: tìm port chưa được sử dụng
+        const existingMappings = await queryRunner.manager.find(PortMapping, {
+          where: {
+            gatewayId: gateway.id,
+            status: PortMappingStatus.ACTIVE,
+          },
+          select: ['port'],
+        });
+        const usedPorts = new Set(existingMappings.map((m) => m.port));
+        
+        for (let port = 4000; port <= 10000 && portNumbers.length < createDto.upstreamIds.length; port++) {
+          if (!usedPorts.has(port)) {
+            portNumbers.push(port);
+          }
+        }
+      }
+
       for (let i = 0; i < createDto.upstreamIds.length; i++) {
-        const port = reservedPorts[i];
+        const portNumber = portNumbers[i];
         const upstream = upstreams[i];
 
-        // Create port mapping
+        // Create port mapping - không cần portId
         const portMapping = queryRunner.manager.create(PortMapping, {
           gatewayId: gateway.id,
-          portId: port.id,
-          port: port.port,
+          portId: null, // Không phụ thuộc GatewayPort entity
+          port: portNumber,
           upstreamId: upstream.id,
           userId,
           assignedAt: new Date(),
@@ -456,24 +758,32 @@ export class PurchasesService {
         const savedMapping = await queryRunner.manager.save(portMapping);
         portMappings.push(savedMapping);
 
+        // Record port change history - use queryRunner to ensure it's in the same transaction
+        const portChangeHistory = queryRunner.manager.create(PortChangeHistory, {
+          userId,
+          gatewayId: gateway.id,
+          portMappingId: savedMapping.id,
+          oldPort: null,
+          newPort: portNumber,
+          changeType: PortChangeType.PORT_CHANGE,
+          changedAt: new Date(),
+        });
+        await queryRunner.manager.save(portChangeHistory);
+
         // Update upstream status to IN_USE
         upstream.status = UpstreamStatus.IN_USE;
         await queryRunner.manager.save(upstream);
-
-        // Assign port
-        port.status = GatewayPortStatus.ASSIGNED;
-        await queryRunner.manager.save(port);
 
         // Create purchase record
         const purchase = queryRunner.manager.create(UserProxyPurchase, {
           userId,
           gatewayId: gateway.id,
-          portId: port.id,
+          portId: null, // Có thể null
           mappingId: savedMapping.id,
           purchasedAt: new Date(),
           expiresAt,
           duration: createDto.duration,
-          price: this.calculatePrice(1, createDto.duration), // Price per upstream
+          price: this.calculatePrice(createDto.upstreamIds.length, createDto.duration) / createDto.upstreamIds.length,
           status: PurchaseStatus.ACTIVE,
           gatewayUsername: credentials.username,
           gatewayPassword: credentials.password,
@@ -485,7 +795,7 @@ export class PurchasesService {
 
       await queryRunner.commitTransaction();
 
-      // Return response
+      // Return response (dùng gateway đầu tiên làm main gateway)
       return {
         purchaseId: purchases[0].id, // Use first purchase ID as main purchase ID
         gateway: {
@@ -494,8 +804,8 @@ export class PurchasesService {
           portRangeStart: gateway.portRangeStart,
           portRangeEnd: gateway.portRangeEnd,
         },
-        ports: portMappings.map((mapping, index) => ({
-          id: reservedPorts[index].id,
+        ports: portMappings.map((mapping) => ({
+          id: mapping.id, // Dùng mapping ID thay vì port ID
           port: mapping.port,
           mappingId: mapping.id,
         })),

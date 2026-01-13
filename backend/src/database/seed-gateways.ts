@@ -37,8 +37,8 @@ async function seedGateways() {
   const sampleGateways = [
     {
       ip: 'localhost', // IP của gateway server (localhost cho local dev)
-      portRangeStart: 10000,
-      portRangeEnd: 20000,
+      portRangeStart: 3000,
+      portRangeEnd: 10000,
       status: GatewayStatus.ACTIVE,
     },
     // Có thể thêm nhiều gateway khác nếu cần
@@ -58,8 +58,8 @@ async function seedGateways() {
   console.log('   POST /gateway-ports/pool với body:');
   console.log('   {');
   console.log('     "gatewayId": "<gateway-id>",');
-  console.log('     "startPort": 10000,');
-  console.log('     "endPort": 20000');
+  console.log('     "startPort": 3000,');
+  console.log('     "endPort": 10000');
   console.log('   }');
 }
 

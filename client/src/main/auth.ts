@@ -2,16 +2,98 @@ import Store from 'electron-store';
 import * as http from 'http';
 import * as https from 'https';
 import { URL } from 'url';
+import * as path from 'path';
+import * as fs from 'fs';
 
 interface AuthStore {
   token?: string;
   email?: string;
 }
 
-const store = new Store<AuthStore>({
-  name: 'auth',
-  encryptionKey: 'proxy992-secret-key-change-in-production',
-});
+// Generate encryption key from machine-specific data for better security
+// In production, this should be stored securely or generated per-user
+function getEncryptionKey(): string {
+  const os = require('os');
+  const crypto = require('crypto');
+  
+  // Use machine-specific data to generate a key
+  // In production, consider using a more secure method or environment variable
+  const machineId = os.hostname() + os.platform() + os.arch();
+  const key = crypto.createHash('sha256').update(machineId + 'Proxy96-secure-key').digest('hex');
+  
+  // For production, use environment variable if available
+  return process.env.ENCRYPTION_KEY || key;
+}
+
+// Function to safely initialize store with corruption recovery
+function createStore(): Store<AuthStore> {
+  try {
+    return new Store<AuthStore>({
+      name: 'auth',
+      encryptionKey: getEncryptionKey(),
+      clearInvalidConfig: true, // Automatically clear invalid config
+    });
+  } catch (error: any) {
+    console.error('[Auth] Failed to create store, attempting to recover...', error);
+    
+    // Try to delete corrupt config file and recreate
+    try {
+      // Use electron-store's default path or try to get from app if available
+      const electron = require('electron');
+      const app = electron.app || electron.remote?.app;
+      
+      let configPath: string | null = null;
+      
+      if (app && app.getPath) {
+        try {
+          const userDataPath = app.getPath('userData');
+          configPath = path.join(userDataPath, 'auth.json');
+        } catch (pathError) {
+          console.warn('[Auth] Could not get userData path, trying default location');
+        }
+      }
+      
+      // Fallback: try common electron-store locations
+      if (!configPath) {
+        const os = require('os');
+        const platform = os.platform();
+        let basePath: string;
+        
+        if (platform === 'darwin') {
+          basePath = path.join(os.homedir(), 'Library', 'Application Support', 'Proxy96-client');
+        } else if (platform === 'win32') {
+          basePath = path.join(os.homedir(), 'AppData', 'Roaming', 'Proxy96-client');
+        } else {
+          basePath = path.join(os.homedir(), '.config', 'Proxy96-client');
+        }
+        
+        configPath = path.join(basePath, 'auth.json');
+      }
+      
+      if (configPath && fs.existsSync(configPath)) {
+        console.log('[Auth] Deleting corrupt config file:', configPath);
+        fs.unlinkSync(configPath);
+      }
+      
+      // Try again with a fresh store
+      return new Store<AuthStore>({
+        name: 'auth',
+        encryptionKey: getEncryptionKey(),
+        clearInvalidConfig: true,
+      });
+    } catch (recoveryError: any) {
+      console.error('[Auth] Failed to recover store:', recoveryError);
+      // Return a new store anyway - it will create empty config
+      return new Store<AuthStore>({
+        name: 'auth',
+        encryptionKey: getEncryptionKey(),
+        clearInvalidConfig: true,
+      });
+    }
+  }
+}
+
+const store = createStore();
 
 // Helper function to make HTTP requests
 function httpRequest(url: string, options: {

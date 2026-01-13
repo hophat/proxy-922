@@ -1,0 +1,9 @@
+{
+  "id": "0000_add_port_to_rotating_proxy_purchases",
+  "prevId": null,
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {}
+}

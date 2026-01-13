@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { PublicUpstream } from '../services/upstreams';
 import { purchasesService, PurchaseDuration, PurchaseResponse } from '../services/purchases';
-import { gatewaysService, PublicGateway } from '../services/gateways';
 import { PurchaseResult } from './PurchaseResult';
+import { PortSelection } from './PortSelection';
 
 interface UpstreamPurchaseDialogProps {
   upstreams: PublicUpstream[];
@@ -21,47 +21,28 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
   onClose,
 }) => {
   const [selectedUpstreamIds, setSelectedUpstreamIds] = useState<Set<string>>(new Set());
+  const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [duration, setDuration] = useState<PurchaseDuration>(PurchaseDuration.HOURS_24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [purchaseResult, setPurchaseResult] = useState<PurchaseResponse | null>(null);
-  const [gateway, setGateway] = useState<PublicGateway | null>(null);
-  const [gateways, setGateways] = useState<PublicGateway[]>([]);
-  const [loadingGateways, setLoadingGateways] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setSelectedUpstreamIds(new Set());
+      setSelectedPorts([]);
       setDuration(PurchaseDuration.HOURS_24);
       setError(null);
       setPurchaseResult(null);
-    } else {
-      // Load gateways mỗi lần mở dialog
-      loadGateways();
     }
   }, [open]);
 
-  const loadGateways = async () => {
-    try {
-      setLoadingGateways(true);
-      const gatewaysData = await gatewaysService.getGateways();
-      setGateways(gatewaysData);
-      // Auto-select gateway đầu tiên có ports available và active
-      const availableGateway = gatewaysData.find(
-        (gw) => gw.status === 'active' && gw.availablePortCount > 0,
-      );
-      if (availableGateway) {
-        setGateway(availableGateway);
-      } else if (gatewaysData.length > 0) {
-        setGateway(gatewaysData[0]);
-      }
-    } catch (error) {
-      console.error('Failed to load gateways:', error);
-      setError('Không thể tải danh sách gateway. Vui lòng thử lại.');
-    } finally {
-      setLoadingGateways(false);
+  // Reset selected ports when upstream selection changes
+  useEffect(() => {
+    if (selectedUpstreamIds.size !== selectedPorts.length) {
+      setSelectedPorts([]);
     }
-  };
+  }, [selectedUpstreamIds.size]);
 
   const handleToggleUpstream = (upstreamId: string) => {
     const newSelected = new Set(selectedUpstreamIds);
@@ -84,8 +65,10 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
       return;
     }
 
-    if (!gateway) {
-      setError('Không tìm thấy gateway');
+    if (selectedPorts.length !== selectedUpstreamIds.size) {
+      setError(
+        `Vui lòng chọn đúng ${selectedUpstreamIds.size} port (mỗi upstream cần 1 port)`,
+      );
       setLoading(false);
       return;
     }
@@ -94,8 +77,9 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
       const upstreamIdsArray = Array.from(selectedUpstreamIds);
       const result = await purchasesService.createUpstreamPurchase(
         upstreamIdsArray,
-        gateway.id,
         duration,
+        undefined, // gatewayId không cần vì sẽ tự động xác định từ port
+        selectedPorts,
       );
       setPurchaseResult(result);
     } catch (err: any) {
@@ -209,6 +193,17 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
               </div>
             </div>
 
+            {selectedUpstreamIds.size > 0 && (
+              <div>
+                <PortSelection
+                  selectedPorts={selectedPorts}
+                  onPortsChange={setSelectedPorts}
+                  requiredCount={selectedUpstreamIds.size}
+                  disabled={loading}
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-300">
                 Thời hạn sử dụng
@@ -222,57 +217,6 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
                 <option value={PurchaseDuration.DAYS_7}>7 ngày</option>
                 <option value={PurchaseDuration.DAYS_30}>30 ngày</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">
-                Chọn Gateway
-              </label>
-              {loadingGateways ? (
-                <div className="text-gray-400 text-sm py-2">Đang tải gateway...</div>
-              ) : gateways.length === 0 ? (
-                <div className="bg-red-500/10 text-red-500 px-4 py-3 rounded-lg text-sm">
-                  Không có gateway nào khả dụng
-                </div>
-              ) : (
-                <select
-                  value={gateway?.id || ''}
-                  onChange={(e) => {
-                    const selected = gateways.find((gw) => gw.id === e.target.value);
-                    if (selected) {
-                      setGateway(selected);
-                    }
-                  }}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                >
-                  {gateways.map((gw) => (
-                    <option key={gw.id} value={gw.id}>
-                      {gw.ipMasked} - Ports: {gw.availablePortCount} available
-                      {gw.status !== 'active' ? ' (Không khả dụng)' : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {gateway && (
-                <div className="mt-2 bg-gray-700/50 rounded-lg p-3 text-sm">
-                  <div className="flex justify-between text-gray-400 mb-1">
-                    <span>IP Gateway:</span>
-                    <span className="text-white font-mono">{gateway.ipMasked}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-400 mb-1">
-                    <span>Port Range:</span>
-                    <span className="text-white">
-                      {gateway.portRangeStart} - {gateway.portRangeEnd}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-gray-400">
-                    <span>Ports khả dụng:</span>
-                    <span className="text-green-400 font-semibold">
-                      {gateway.availablePortCount}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="pt-4 border-t border-gray-700">
@@ -291,7 +235,11 @@ export const UpstreamPurchaseDialog: React.FC<UpstreamPurchaseDialogProps> = ({
 
               <button
                 type="submit"
-                disabled={loading || selectedUpstreamIds.size === 0 || !gateway}
+                disabled={
+                  loading ||
+                  selectedUpstreamIds.size === 0 ||
+                  selectedPorts.length !== selectedUpstreamIds.size
+                }
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
               >
                 {loading ? 'Đang xử lý...' : 'Mua ngay'}

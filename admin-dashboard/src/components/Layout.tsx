@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   CreditCard,
   Plug,
+  Package,
   LogOut,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ const Layout = () => {
     { path: "/purchases", label: "Purchases", icon: ShoppingCart },
     { path: "/payments", label: "Payments", icon: CreditCard },
     { path: "/port-mappings", label: "Port Mappings", icon: Plug },
+    { path: "/app-versions", label: "App Versions", icon: Package },
   ];
 
   return (

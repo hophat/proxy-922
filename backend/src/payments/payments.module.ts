@@ -5,12 +5,14 @@ import { PaymentsService } from './payments.service';
 import { SePayService } from './sepay.service';
 import { PaymentOrder } from './payment-order.entity';
 import { PurchasesModule } from '../purchases/purchases.module';
+import { RotatingProxyModule } from '../rotating-proxy/rotating-proxy.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PaymentOrder]),
     forwardRef(() => PurchasesModule),
+    forwardRef(() => RotatingProxyModule),
     AuthModule,
   ],
   controllers: [PaymentsController],

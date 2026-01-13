@@ -4,6 +4,10 @@ import * as auth from './auth';
 import { getPortForwardManager, PortMapping } from './port-forward';
 import * as upstreams from './upstreams';
 import * as payments from './payments';
+import * as updater from './updater';
+import { rotatingProxyServerManager } from './rotating-proxy-server';
+import { getLocalIP, getPublicIP } from './public-ip';
+import { initializeUPnP, cleanupUPnP } from './upnp-port-mapping';
 
 let mainWindow: BrowserWindow | null = null;
 const BACKEND_URL = process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
@@ -24,15 +28,38 @@ function createWindow() {
     console.error(`[Main] ERROR: Preload script not found at ${absolutePreloadPath}`);
   }
 
+  // Get icon path - try multiple locations
+  let iconPath: string | undefined;
+  const possiblePaths = [
+    path.join(__dirname, '../renderer/logo.png'), // Production: dist/renderer/logo.png
+    path.join(__dirname, '../../logo.png'), // Development: root/logo.png
+    path.join(__dirname, '../logo.png'), // Alternative production path
+  ];
+  
+  for (const possiblePath of possiblePaths) {
+    if (fs.existsSync(possiblePath)) {
+      iconPath = possiblePath;
+      break;
+    }
+  }
+  
+  if (iconPath) {
+    console.log(`[Main] Using icon: ${iconPath}`);
+  } else {
+    console.warn('[Main] Logo not found, using default icon');
+  }
+
   mainWindow = new BrowserWindow({
-    width: 600,
-    height: 700,
+    width: 1280,
+    height: 800,
+    title: 'Proxy96',
+    ...(iconPath && { icon: iconPath }), // Set app icon if found
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: absolutePreloadPath, // Use absolute path
-      webSecurity: false, // Disable for development
-      sandbox: false, // Disable sandbox to ensure preload works
+      webSecurity: process.env.NODE_ENV === 'production', // Only disable in development
+      sandbox: process.env.NODE_ENV === 'production', // Enable sandbox in production
     },
   });
 
@@ -129,11 +156,46 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+async function checkForUpdatesOnStartup() {
+  try {
+    console.log('[Updater] Checking for updates on startup...');
+    const updateInfo = await updater.checkForUpdates();
+    
+    if (updateInfo.hasUpdate && mainWindow) {
+      console.log(`[Updater] Update available: ${updateInfo.version}`);
+      // Send update available event to renderer
+      mainWindow.webContents.send('update:available', updateInfo);
+    } else {
+      console.log('[Updater] No updates available');
+    }
+  } catch (error: any) {
+    console.error('[Updater] Error checking for updates on startup:', error);
+    // Don't show error to user on startup, just log it
+  }
+}
+
+app.whenReady().then(async () => {
   console.log('🚀 Electron app starting...');
   console.log(`📡 Backend URL: ${BACKEND_URL}`);
   console.log(`🌐 Gateway: ${GATEWAY_HOST}:${GATEWAY_PORT}`);
+  
+  // Initialize UPnP for automatic port mapping (non-blocking)
+  initializeUPnP().then((available) => {
+    if (available) {
+      console.log('✅ UPnP/NAT-PMP initialized - automatic port mapping enabled');
+    } else {
+      console.log('ℹ️  UPnP/NAT-PMP not available - ports will work in local network only');
+    }
+  }).catch((err) => {
+    console.warn('⚠️  UPnP initialization failed:', err.message);
+  });
+  
   createWindow();
+
+  // Check for updates after a short delay to not block app startup
+  setTimeout(() => {
+    checkForUpdatesOnStartup();
+  }, 3000); // Wait 3 seconds after app starts
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -148,9 +210,21 @@ app.on('window-all-closed', () => {
   }
 });
 
+app.on('before-quit', async () => {
+  // Cleanup UPnP port mappings before quitting
+  console.log('[Main] Cleaning up UPnP port mappings...');
+  try {
+    await cleanupUPnP();
+    await rotatingProxyServerManager.stopAllServers();
+  } catch (err: any) {
+    console.warn('[Main] Error during cleanup:', err.message);
+  }
+});
+
 // IPC handlers
 ipcMain.handle('register', async (_, email: string, password: string) => {
-  console.log(`[IPC] Register request received for: ${email}`);
+  // SECURITY: Do not log email or password
+  console.log(`[IPC] Register request received`);
   console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
   try {
     const result = await auth.register(email, password, BACKEND_URL);
@@ -166,7 +240,8 @@ ipcMain.handle('register', async (_, email: string, password: string) => {
 });
 
 ipcMain.handle('verifyOtp', async (_, email: string, code: string, password: string) => {
-  console.log(`[IPC] Verify OTP request received for: ${email}`);
+  // SECURITY: Do not log email, code, or password
+  console.log(`[IPC] Verify OTP request received`);
   console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
   try {
     const result = await auth.verifyOtp(email, code, password, BACKEND_URL);
@@ -182,7 +257,8 @@ ipcMain.handle('verifyOtp', async (_, email: string, code: string, password: str
 });
 
 ipcMain.handle('resendOtp', async (_, email: string) => {
-  console.log(`[IPC] Resend OTP request received for: ${email}`);
+  // SECURITY: Do not log email
+  console.log(`[IPC] Resend OTP request received`);
   console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
   try {
     const result = await auth.resendOtp(email, BACKEND_URL);
@@ -198,7 +274,8 @@ ipcMain.handle('resendOtp', async (_, email: string) => {
 });
 
 ipcMain.handle('login', async (_, email: string, password: string) => {
-  console.log(`[IPC] Login request received for: ${email}`);
+  // SECURITY: Do not log email or password
+  console.log(`[IPC] Login request received`);
   console.log(`[IPC] Backend URL: ${BACKEND_URL}`);
   try {
     const result = await auth.login(email, password, BACKEND_URL);
@@ -284,11 +361,13 @@ ipcMain.handle('connect', async () => {
   }
 
   // Return gateway connection info instead of starting local proxy
+  // SECURITY: Do not return token in IPC response - token is stored securely in main process
+  // Client apps should request token separately if needed, or use internal APIs
   return { 
     connected: true,
     gatewayHost: GATEWAY_HOST,
     gatewayPort: GATEWAY_PORT,
-    token: token // Token will be used by client apps to connect to gateway
+    // Token is not returned for security - it's stored in main process and used internally
   };
 });
 
@@ -368,11 +447,12 @@ ipcMain.handle('reconnect', async () => {
   }
 
   // Return gateway connection info
+  // SECURITY: Do not return token in IPC response
   return { 
     connected: true,
     gatewayHost: GATEWAY_HOST,
     gatewayPort: GATEWAY_PORT,
-    token: token
+    // Token is not returned for security - it's stored in main process and used internally
   };
 });
 
@@ -429,6 +509,39 @@ ipcMain.handle('port-forward:stop-all', async () => {
   return { success: true };
 });
 
+ipcMain.handle('port-forward:change-port', async (_event, mappingId: string, newPort: number) => {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const manager = getPortForwardManager(BACKEND_URL, GATEWAY_HOST, GATEWAY_PORT);
+  const result = await manager.changePort(mappingId, newPort, token);
+  return result;
+});
+
+ipcMain.handle('port-forward:get-gateways', async () => {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const manager = getPortForwardManager(BACKEND_URL, GATEWAY_HOST, GATEWAY_PORT);
+  const gateways = await manager.getAvailableGateways(token);
+  return gateways;
+});
+
+ipcMain.handle('port-forward:get-available-ports', async () => {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const manager = getPortForwardManager(BACKEND_URL, GATEWAY_HOST, GATEWAY_PORT);
+  const ports = await manager.getAvailablePorts(token);
+  return ports;
+});
+
 // Upstreams IPC Handlers
 ipcMain.handle('upstreams:getAvailable', async () => {
   try {
@@ -471,6 +584,130 @@ ipcMain.handle('payments:getOrders', async () => {
   }
 });
 
+ipcMain.handle('payments:createRotatingProxyOrder', async (_event, createDto: any) => {
+  try {
+    return await payments.createRotatingProxyOrder(BACKEND_URL, createDto);
+  } catch (err: any) {
+    console.error('[Main] Failed to create rotating proxy order:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('payments:getMyRotatingProxies', async () => {
+  try {
+    const proxies = await payments.getMyRotatingProxies(BACKEND_URL);
+    // Get local IP and update proxy IPs (use local IP instead of public IP)
+    try {
+      const localIP = getLocalIP();
+      return proxies.map((p) => ({
+        ...p,
+        ip: localIP,
+      }));
+    } catch (err) {
+      console.warn('[Main] Failed to get local IP, using empty string:', err);
+      return proxies;
+    }
+  } catch (err: any) {
+    console.error('[Main] Failed to get rotating proxies:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('payments:updateRotatingProxyPort', async (_event, id: string, port: number) => {
+  try {
+    const result = await payments.updateRotatingProxyPort(BACKEND_URL, id, port);
+    // Restart server with new port if it's running
+    if (rotatingProxyServerManager.isServerRunning(id)) {
+      await rotatingProxyServerManager.stopServer(id);
+      if (port) {
+        await rotatingProxyServerManager.startServer(id, port);
+      }
+    } else if (port) {
+      // Start server if port is set
+      await rotatingProxyServerManager.startServer(id, port);
+    }
+    return result;
+  } catch (err: any) {
+    console.error('[Main] Failed to update rotating proxy port:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('payments:updateRotatingProxyRotationInterval', async (_event, id: string, rotationInterval: number) => {
+  try {
+    return await payments.updateRotatingProxyRotationInterval(BACKEND_URL, id, rotationInterval);
+  } catch (err: any) {
+    console.error('[Main] Failed to update rotating proxy rotation interval:', err);
+    throw err;
+  }
+});
+
+// Rotating Proxy Server IPC Handlers
+ipcMain.handle('rotating-proxy:startServer', async (_event, id: string, port: number) => {
+  try {
+    await rotatingProxyServerManager.startServer(id, port);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Main] Failed to start rotating proxy server:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('rotating-proxy:stopServer', async (_event, id: string) => {
+  try {
+    await rotatingProxyServerManager.stopServer(id);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Main] Failed to stop rotating proxy server:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('rotating-proxy:isServerRunning', async (_event, id: string) => {
+  return rotatingProxyServerManager.isServerRunning(id);
+});
+
+ipcMain.handle('rotating-proxy:getPublicIP', async () => {
+  try {
+    // Use local IP instead of public IP
+    const ip = getLocalIP();
+    return ip;
+  } catch (err: any) {
+    console.error('[Main] Failed to get local IP:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('rotating-proxy:startAllServers', async () => {
+  try {
+    const token = auth.getToken();
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const proxies = await payments.getMyRotatingProxies(BACKEND_URL);
+    const promises = proxies
+      .filter((p) => p.port && p.status === 'active')
+      .map((p) => rotatingProxyServerManager.startServer(p.id, p.port!));
+    
+    await Promise.all(promises);
+    return { success: true, count: promises.length };
+  } catch (err: any) {
+    console.error('[Main] Failed to start all rotating proxy servers:', err);
+    throw err;
+  }
+});
+
+ipcMain.handle('rotating-proxy:stopAllServers', async () => {
+  try {
+    await rotatingProxyServerManager.stopAllServers();
+    return { success: true };
+  } catch (err: any) {
+    console.error('[Main] Failed to stop all rotating proxy servers:', err);
+    throw err;
+  }
+});
+
 ipcMain.handle('payments:getOrderStatus', async (_event, orderCode: string) => {
   try {
     const result = await payments.getPaymentOrderStatus(BACKEND_URL, orderCode);
@@ -479,5 +716,49 @@ ipcMain.handle('payments:getOrderStatus', async (_event, orderCode: string) => {
     console.error('[IPC] Failed to get payment order status:', error);
     throw error;
   }
+});
+
+// Update IPC Handlers
+ipcMain.handle('checkForUpdates', async () => {
+  try {
+    const result = await updater.checkForUpdates();
+    return result;
+  } catch (error: any) {
+    console.error('[IPC] Failed to check for updates:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('downloadUpdate', async (_event, downloadUrl: string) => {
+  try {
+    const filePath = await updater.downloadUpdate(downloadUrl, (progress) => {
+      // Send progress update to renderer
+      if (mainWindow) {
+        mainWindow.webContents.send('update:download-progress', progress);
+      }
+    });
+    return filePath;
+  } catch (error: any) {
+    console.error('[IPC] Failed to download update:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('installUpdate', async (_event, filePath: string) => {
+  try {
+    await updater.installUpdate(filePath);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[IPC] Failed to install update:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('getUpdateStatus', async () => {
+  return updater.getUpdateStatus();
+});
+
+ipcMain.handle('getCurrentVersion', async () => {
+  return updater.getCurrentVersion();
 });
 

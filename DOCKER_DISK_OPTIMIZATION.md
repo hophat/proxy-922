@@ -164,7 +164,7 @@ docker system prune -af --volumes
 crontab -e
 
 # Thêm dòng sau (chạy mỗi ngày lúc 2:00 AM)
-0 2 * * * /path/to/proxy992/docker-cleanup-safe.sh >> /var/log/docker-cleanup.log 2>&1
+0 2 * * * /path/to/Proxy96/docker-cleanup-safe.sh >> /var/log/docker-cleanup.log 2>&1
 ```
 
 ### Hoặc systemd timer (Linux)
@@ -178,7 +178,7 @@ After=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/path/to/proxy992/docker-cleanup-safe.sh
+ExecStart=/path/to/Proxy96/docker-cleanup-safe.sh
 ```
 
 Tạo file `/etc/systemd/system/docker-cleanup.timer`:

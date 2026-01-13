@@ -1,7 +1,7 @@
 {
-  "name": "proxy992-admin",
+  "name": "Proxy96-admin",
   "version": "1.0.0",
-  "description": "Admin Dashboard for Proxy992 with Shadcn Admin Kit",
+  "description": "Admin Dashboard for Proxy96 with Shadcn Admin Kit",
   "type": "module",
   "scripts": {
     "dev": "vite",

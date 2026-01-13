@@ -1,6 +1,6 @@
 # Hướng dẫn Build Client Application
 
-Tài liệu này hướng dẫn cách build Proxy992 Client application cho Windows và macOS.
+Tài liệu này hướng dẫn cách build Proxy96 Client application cho Windows và macOS.
 
 ## Prerequisites (Yêu cầu)
 
@@ -14,8 +14,8 @@ Tài liệu này hướng dẫn cách build Proxy992 Client application cho Wind
 
 ```bash
 # Clone repository
-git clone <repository-url> proxy992
-cd proxy992/client
+git clone <repository-url> Proxy96
+cd Proxy96/client
 
 # Install dependencies
 npm install
@@ -70,7 +70,7 @@ npm run build:win
 ```
 
 Kết quả sẽ được lưu trong thư mục `dist/`:
-- `dist/Proxy992 Client Setup X.X.X.exe` - Windows installer (NSIS)
+- `dist/Proxy96 Client Setup X.X.X.exe` - Windows installer (NSIS)
 
 **Yêu cầu:**
 - Có thể build trên Windows, macOS, hoặc Linux
@@ -84,8 +84,8 @@ npm run build:mac
 ```
 
 Kết quả sẽ được lưu trong thư mục `dist/`:
-- `dist/Proxy992 Client-X.X.X.dmg` - macOS disk image
-- `dist/Proxy992 Client-X.X.X-mac.zip` - macOS zip archive
+- `dist/Proxy96 Client-X.X.X.dmg` - macOS disk image
+- `dist/Proxy96 Client-X.X.X-mac.zip` - macOS zip archive
 
 **Yêu cầu:**
 - Phải build trên macOS
@@ -139,9 +139,9 @@ client/
 │   │   ├── index.html
 │   │   ├── assets/
 │   │   └── ...
-│   ├── Proxy992 Client Setup X.X.X.exe  # Windows installer
-│   ├── Proxy992 Client-X.X.X.dmg        # macOS disk image
-│   └── Proxy992 Client-X.X.X-mac.zip    # macOS zip
+│   ├── Proxy96 Client Setup X.X.X.exe  # Windows installer
+│   ├── Proxy96 Client-X.X.X.dmg        # macOS disk image
+│   └── Proxy96 Client-X.X.X-mac.zip    # macOS zip
 └── ...
 ```
 
@@ -324,7 +324,7 @@ Version được quản lý trong `package.json`:
 
 ```json
 {
-  "name": "proxy992-client",
+  "name": "Proxy96-client",
   "version": "1.0.0"
 }
 ```

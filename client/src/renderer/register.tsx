@@ -146,8 +146,22 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onVerifyOtp, onR
           <div className="w-full max-w-[480px] flex flex-col gap-6">
             {/* Logo Section */}
             <div className="flex flex-col items-center justify-center pb-2">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
-                <span className="material-symbols-outlined text-white text-[32px]">mail</span>
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-xl overflow-hidden shadow-lg">
+                <img 
+                  src="/logo.png" 
+                  alt="Proxy96 Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback to icon if logo not found
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<span class="material-symbols-outlined text-white text-[32px]">mail</span>';
+                      parent.className = 'mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30';
+                    }
+                  }}
+                />
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">Xác thực Email</h1>
               <p className="mt-2 text-base font-normal text-slate-500 dark:text-text-muted text-center max-w-xs">
@@ -254,16 +268,30 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onVerifyOtp, onR
       {/* Main Layout */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-4">
         <div className="w-full max-w-[480px] flex flex-col gap-6">
-          {/* Logo Section */}
-          <div className="flex flex-col items-center justify-center pb-2">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
-              <span className="material-symbols-outlined text-white text-[32px]">person_add</span>
+            {/* Logo Section */}
+            <div className="flex flex-col items-center justify-center pb-2">
+              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-xl overflow-hidden shadow-lg">
+                <img 
+                  src="/logo.png" 
+                  alt="Proxy96 Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback to icon if logo not found
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<span class="material-symbols-outlined text-white text-[32px]">person_add</span>';
+                      parent.className = 'mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30';
+                    }
+                  }}
+                />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">Đăng Ký</h1>
+              <p className="mt-2 text-base font-normal text-slate-500 dark:text-text-muted text-center max-w-xs">
+                Tạo tài khoản mới để sử dụng dịch vụ
+              </p>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white text-center">Đăng Ký</h1>
-            <p className="mt-2 text-base font-normal text-slate-500 dark:text-text-muted text-center max-w-xs">
-              Tạo tài khoản mới để sử dụng dịch vụ
-            </p>
-          </div>
 
           {/* Card */}
           <div className="flex flex-col rounded-xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark shadow-2xl overflow-hidden">

@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"Proxy96-gateway/internal/session"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
@@ -10,7 +11,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"proxy992-gateway/internal/session"
 	"strings"
 	"time"
 )

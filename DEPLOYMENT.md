@@ -1,6 +1,6 @@
 # Hướng dẫn Deploy Server Production
 
-Tài liệu này hướng dẫn cách deploy Proxy992 Platform lên môi trường production.
+Tài liệu này hướng dẫn cách deploy Proxy96 Platform lên môi trường production.
 
 ## Prerequisites (Yêu cầu hệ thống)
 
@@ -66,8 +66,8 @@ docker compose version
 
 ```bash
 # Clone repository
-git clone <repository-url> proxy992
-cd proxy992
+git clone <repository-url> Proxy96
+cd Proxy96
 
 # Hoặc nếu đã có code, upload lên server
 ```
@@ -90,7 +90,7 @@ nano .env
 # Database Configuration
 POSTGRES_USER=proxyadmin
 POSTGRES_PASSWORD=<GENERATE_STRONG_PASSWORD>
-POSTGRES_DB=proxy992
+POSTGRES_DB=Proxy96
 POSTGRES_PORT=5432
 
 # Redis Configuration
@@ -152,7 +152,7 @@ sudo chown $USER:$USER gateway/certs/*.pem
 # Setup auto-renewal (thêm vào crontab)
 sudo crontab -e
 # Thêm dòng sau (chạy mỗi ngày lúc 2:00 AM):
-0 2 * * * certbot renew --quiet && docker compose -f /path/to/proxy992/docker-compose.yml restart gateway
+0 2 * * * certbot renew --quiet && docker compose -f /path/to/Proxy96/docker-compose.yml restart gateway
 ```
 
 ### Option 2: Self-signed Certificate (Chỉ cho Development/Testing)
@@ -209,10 +209,10 @@ docker compose ps
 Kết quả mong đợi:
 ```
 NAME                 STATUS          PORTS
-proxy992-backend     Up (healthy)    0.0.0.0:3300->3300/tcp
-proxy992-gateway     Up              0.0.0.0:8080->8080/tcp
-proxy992-postgres    Up (healthy)    0.0.0.0:5432->5432/tcp
-proxy992-redis       Up (healthy)    0.0.0.0:6379->6379/tcp
+Proxy96-backend     Up (healthy)    0.0.0.0:3300->3300/tcp
+Proxy96-gateway     Up              0.0.0.0:8080->8080/tcp
+Proxy96-postgres    Up (healthy)    0.0.0.0:5432->5432/tcp
+Proxy96-redis       Up (healthy)    0.0.0.0:6379->6379/tcp
 ```
 
 ### Kiểm tra Backend API
@@ -236,7 +236,7 @@ openssl s_client -connect localhost:8080 -servername your-domain.com
 
 ```bash
 # Connect vào PostgreSQL
-docker compose exec postgres psql -U proxyadmin -d proxy992
+docker compose exec postgres psql -U proxyadmin -d Proxy96
 
 # Kiểm tra tables
 \dt
@@ -314,7 +314,7 @@ sudo apt-get install -y nginx
 
 ### Cấu hình Nginx cho Backend API
 
-Tạo file `/etc/nginx/sites-available/proxy992-backend`:
+Tạo file `/etc/nginx/sites-available/Proxy96-backend`:
 
 ```nginx
 server {
@@ -350,7 +350,7 @@ server {
 
 ```bash
 # Enable site
-sudo ln -s /etc/nginx/sites-available/proxy992-backend /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/Proxy96-backend /etc/nginx/sites-enabled/
 
 # Test configuration
 sudo nginx -t
@@ -395,12 +395,12 @@ docker compose up -d --no-deps gateway
 # Tạo backup script
 cat > backup-db.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/backup/proxy992"
+BACKUP_DIR="/backup/Proxy96"
 DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 
 # Backup PostgreSQL
-docker compose exec -T postgres pg_dump -U proxyadmin proxy992 | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+docker compose exec -T postgres pg_dump -U proxyadmin Proxy96 | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
 # Backup Redis (optional)
 docker compose exec -T redis redis-cli -a <REDIS_PASSWORD> --rdb /data/dump.rdb
@@ -423,7 +423,7 @@ chmod +x backup-db.sh
 
 ```bash
 # Restore từ backup
-gunzip -c /backup/proxy992/db_20240101_030000.sql.gz | docker compose exec -T postgres psql -U proxyadmin -d proxy992
+gunzip -c /backup/Proxy96/db_20240101_030000.sql.gz | docker compose exec -T postgres psql -U proxyadmin -d Proxy96
 ```
 
 ### Backup Docker Volumes
@@ -431,12 +431,12 @@ gunzip -c /backup/proxy992/db_20240101_030000.sql.gz | docker compose exec -T po
 ```bash
 # Backup volumes
 docker run --rm \
-  -v proxy992_postgres_data:/data \
+  -v Proxy96_postgres_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/postgres_data_backup.tar.gz -C /data .
 
 docker run --rm \
-  -v proxy992_redis_data:/data \
+  -v Proxy96_redis_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/redis_data_backup.tar.gz -C /data .
 ```

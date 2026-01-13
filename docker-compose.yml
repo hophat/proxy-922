@@ -7,11 +7,11 @@
 services:
   # postgres:
   #   image: postgres:15-alpine
-  #   container_name: proxy992-postgres
+  #   container_name: Proxy96-postgres
   #   environment:
   #     POSTGRES_USER: ${POSTGRES_USER:-proxyadmin}
   #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-  #     POSTGRES_DB: ${POSTGRES_DB:-proxy992}
+  #     POSTGRES_DB: ${POSTGRES_DB:-Proxy96}
   #   ports:
   #     - "${POSTGRES_PORT:-5432}:5432"
   #   volumes:
@@ -22,11 +22,11 @@ services:
   #     timeout: 5s
   #     retries: 5
   #   networks:
-  #     - proxy992-network
+  #     - Proxy96-network
 
   redis:
     image: redis:7-alpine
-    container_name: proxy992-redis
+    container_name: Proxy96-redis
     ports:
       - "${REDIS_PORT:-6372}:6379"
     volumes:
@@ -38,7 +38,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - proxy992-network
+      - Proxy96-network
 
   backend:
     build:
@@ -47,7 +47,7 @@ services:
       # BuildKit cache mounts for faster npm installs
       cache_from:
         - node:20-alpine
-    container_name: proxy992-backend
+    container_name: Proxy96-backend
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND_PORT:-3400}
@@ -55,7 +55,7 @@ services:
       # DATABASE_PORT: 5432
       # DATABASE_USER: ${POSTGRES_USER:-proxyadmin}
       # DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      # DATABASE_NAME: ${POSTGRES_DB:-proxy992}
+      # DATABASE_NAME: ${POSTGRES_DB:-Proxy96}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
@@ -76,7 +76,7 @@ services:
       - ./backend:/app
       - /app/node_modules
     networks:
-      - proxy992-network
+      - Proxy96-network
     restart: unless-stopped
 
   gateway:
@@ -86,7 +86,7 @@ services:
       # BuildKit cache for Go modules
       cache_from:
         - golang:1.21-alpine
-    container_name: proxy992-gateway
+    container_name: Proxy96-gateway
     environment:
       GATEWAY_PORT: ${GATEWAY_PORT:-8880}
       BACKEND_API_URL: http://backend:3400
@@ -107,7 +107,7 @@ services:
     volumes:
       - ./gateway/certs:/certs
     networks:
-      - proxy992-network
+      - Proxy96-network
     restart: unless-stopped
 
 volumes:
@@ -115,7 +115,7 @@ volumes:
   redis_data:
 
 networks:
-  proxy992-network:
+  Proxy96-network:
     driver: bridge
 
 # Thay USERNAME, PASSWORD, PORT bằng giá trị từ purchase của bạn

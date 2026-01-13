@@ -9,6 +9,7 @@ import UpstreamsPage from "./pages/upstreams/UpstreamsPage";
 import PurchasesPage from "./pages/purchases/PurchasesPage";
 import PaymentsPage from "./pages/payments/PaymentsPage";
 import PortMappingsPage from "./pages/port-mappings/PortMappingsPage";
+import AppVersionsPage from "./pages/app-versions/AppVersionsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import { ADMIN_BASE_PATH } from "./constants/routes";
@@ -36,6 +37,7 @@ const App = () => {
             <Route path="purchases" element={<PurchasesPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="port-mappings" element={<PortMappingsPage />} />
+            <Route path="app-versions" element={<AppVersionsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

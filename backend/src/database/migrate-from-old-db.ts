@@ -16,7 +16,7 @@ const SOURCE_CONFIG = {
 const TARGET_CONFIG = {
   host: process.env.DATABASE_HOST || '14.225.254.130',
   port: parseInt(process.env.DATABASE_PORT || '5434', 10),
-  database: process.env.DATABASE_NAME || 'proxy992_new',
+  database: process.env.DATABASE_NAME || 'Proxy992_new',
   user: process.env.DATABASE_USER || 'tsh_db',
   password: process.env.DATABASE_PASSWORD || 'Tsh123qwe',
 };

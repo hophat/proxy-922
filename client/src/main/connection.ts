@@ -8,11 +8,13 @@ export function createConnection(
 ): Promise<net.Socket> {
   return new Promise((resolve, reject) => {
     // Create TLS connection to gateway
+    // Only disable certificate validation in development
+    const isDevelopment = process.env.NODE_ENV !== 'production';
     const socket = tls.connect(
       {
         host: gatewayHost,
         port: gatewayPort,
-        rejectUnauthorized: false, // For self-signed certs in development
+        rejectUnauthorized: !isDevelopment, // Only allow self-signed certs in development
         minVersion: 'TLSv1.2', // Match gateway's TLS 1.2 requirement
         maxVersion: 'TLSv1.3', // Support TLS 1.3 if available
       },
@@ -50,11 +52,13 @@ export function createConnectionWithMapping(
 ): Promise<net.Socket> {
   return new Promise((resolve, reject) => {
     // Create TLS connection to gateway
+    // Only disable certificate validation in development
+    const isDevelopment = process.env.NODE_ENV !== 'production';
     const socket = tls.connect(
       {
         host: gatewayHost,
         port: gatewayPort,
-        rejectUnauthorized: false, // For self-signed certs in development
+        rejectUnauthorized: !isDevelopment, // Only allow self-signed certs in development
         minVersion: 'TLSv1.2', // Match gateway's TLS 1.2 requirement
         maxVersion: 'TLSv1.3', // Support TLS 1.3 if available
       },

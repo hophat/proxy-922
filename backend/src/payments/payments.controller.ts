@@ -90,20 +90,28 @@ export class PaymentsController {
     @Req() req: any,
   ) {
     // Public endpoint - không cần JWT auth
-    // Nhưng có thể xác thực bằng API key trong header nếu cần
+    // Xác thực bằng API key từ header Authorization: "Apikey API_KEY"
 
     try {
-      // Verify webhook signature nếu có
-      const signature = authorization?.replace('Bearer ', '') || req.headers['x-sepay-signature'];
-      const isValid = this.sepayService.verifyWebhook(
+      // Verify API key từ header Authorization
+      // Format: "Authorization: Apikey API_KEY_CUA_BAN"
+      const isValidApiKey = this.sepayService.verifyApiKey(authorization);
+
+      if (!isValidApiKey) {
+        this.logger.warn('Invalid API key in webhook request');
+        // Trả về success để SePay không retry, nhưng log warning
+        return { success: false, message: 'Invalid API key' };
+      }
+
+      // Verify webhook payload (kiểm tra có order code và amount)
+      const isValidPayload = this.sepayService.verifyWebhook(
         webhookPayload,
-        signature || null,
+        null, // Không dùng signature nữa, dùng API key
       );
 
-      if (!isValid && this.sepayService['webhookSecret']) {
-        this.logger.warn('Invalid webhook signature');
-        // Trả về success để SePay không retry
-        return { success: false, message: 'Invalid signature' };
+      if (!isValidPayload) {
+        this.logger.warn('Invalid webhook payload');
+        return { success: false, message: 'Invalid payload' };
       }
 
       // Handle webhook
@@ -115,10 +123,16 @@ export class PaymentsController {
         `Error handling SePay webhook: ${error.message}`,
         error.stack,
       );
+      this.logger.error(`Webhook payload: ${JSON.stringify(webhookPayload)}`);
       
       // Trả về success để SePay không retry
-      // Nếu cần retry, có thể return error status
-      return { success: true, message: 'Processed with errors' };
+      // Nhưng include error message để debug
+      return { 
+        success: true, 
+        message: 'Processed with errors',
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      };
     }
   }
 }

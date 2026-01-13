@@ -836,13 +836,16 @@ export class AdminController {
     let activationError: string | null = null;
     if (body.status === PaymentOrderStatus.PAID && previousStatus !== PaymentOrderStatus.PAID) {
       try {
+        console.log(`[Admin] Activating purchase for payment order ${id}, type: ${order.purchaseType}`);
         await this.paymentsService.activatePurchaseFromPaymentOrderId(id);
         purchaseActivated = true;
+        console.log(`[Admin] Purchase activated successfully for order ${id}`);
       } catch (error: any) {
         // Log error nhưng vẫn giữ payment status là PAID
         // Admin có thể retry hoặc xử lý sau
         activationError = error.message;
-        console.error(`Failed to activate purchase for payment order ${id}:`, error.message);
+        console.error(`[Admin] Failed to activate purchase for payment order ${id}:`, error.message);
+        console.error(`[Admin] Error stack:`, error.stack);
       }
     }
     

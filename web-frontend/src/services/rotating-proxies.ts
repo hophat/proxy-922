@@ -1,76 +1,59 @@
 import apiClient from './api';
+import { PurchaseDuration } from './purchases';
 
-export enum RotationInterval {
-  MINUTES_5 = 5,
-  MINUTES_15 = 15,
-  MINUTES_60 = 60,
+export interface CreateRotatingProxyOrderDto {
+  proxyCount: number;
+  duration: PurchaseDuration;
 }
 
-export enum PurchaseDuration {
-  HOURS_24 = '24h',
-  DAYS_7 = '7d',
-  DAYS_30 = '30d',
-}
-
-export interface RotatingProxyPackage {
+export interface PaymentOrderResponse {
   id: string;
-  rotationInterval: RotationInterval;
-  price: number;
-  description?: string;
+  orderCode: string;
+  amount: number;
+  status: string;
+  qrCodeUrl: string | null;
+  vaNumber: string | null;
+  accountName: string | null;
+  expiredAt: string;
+  createdAt: string;
 }
 
-export interface CreateRotatingProxyPurchaseDto {
-  rotationInterval: RotationInterval;
-  duration: PurchaseDuration;
-}
-
-export interface RotatingProxyPurchaseResponse {
-  purchaseId: string;
-  domain: string;
-  apiKey: string;
-  rotationInterval: RotationInterval;
-  duration: PurchaseDuration;
-  expiresAt: string;
-  price: number;
-}
-
-export interface RotatingProxyPurchase {
+export interface RotatingProxyResponse {
   id: string;
-  userId: string;
-  rotationInterval: RotationInterval;
-  duration: PurchaseDuration;
   domain: string;
-  apiKey: string;
-  purchasedAt: string;
+  ip: string;
+  port: number | null;
   expiresAt: string;
-  price: number;
+  duration: PurchaseDuration;
   status: string;
 }
 
 export const rotatingProxiesService = {
-  async getPackages(): Promise<RotatingProxyPackage[]> {
-    const response = await apiClient.get<RotatingProxyPackage[]>('/rotating-proxy/packages');
-    return response.data;
-  },
-
-  async createPurchase(
-    rotationInterval: RotationInterval,
+  async createOrder(
+    proxyCount: number,
     duration: PurchaseDuration,
-  ): Promise<RotatingProxyPurchaseResponse> {
-    const response = await apiClient.post<RotatingProxyPurchaseResponse>('/rotating-proxy/purchase', {
-      rotationInterval,
+  ): Promise<PaymentOrderResponse> {
+    const response = await apiClient.post<PaymentOrderResponse>('/rotating-proxy/order', {
+      proxyCount,
       duration,
     });
     return response.data;
   },
 
-  async getMyPurchases(): Promise<RotatingProxyPurchase[]> {
-    const response = await apiClient.get<RotatingProxyPurchase[]>('/rotating-proxy/my-purchases');
+  async getMyRotatingProxies(): Promise<RotatingProxyResponse[]> {
+    const response = await apiClient.get<RotatingProxyResponse[]>('/rotating-proxy/my');
     return response.data;
   },
 
-  async getPurchaseById(purchaseId: string): Promise<RotatingProxyPurchase> {
-    const response = await apiClient.get<RotatingProxyPurchase>(`/rotating-proxy/purchases/${purchaseId}`);
+  async getRotatingProxyById(id: string): Promise<RotatingProxyResponse> {
+    const response = await apiClient.get<RotatingProxyResponse>(`/rotating-proxy/${id}`);
+    return response.data;
+  },
+
+  async updatePort(id: string, port: number): Promise<RotatingProxyResponse> {
+    const response = await apiClient.put<RotatingProxyResponse>(`/rotating-proxy/${id}/port`, {
+      port,
+    });
     return response.data;
   },
 };

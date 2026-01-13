@@ -4,20 +4,63 @@ import { Register } from './register';
 import { Dashboard } from './dashboard';
 import { Proxies } from './proxies';
 import { PortForwards } from './port-forwards';
+import { RotatingProxies } from './rotating-proxies';
 import { PaymentHistory } from './PaymentHistory';
 import { Settings } from './Settings';
-
-type Route = 'dashboard' | 'proxies' | 'port-forwards' | 'payment-history' | 'settings';
+import { UpdateDialog } from './UpdateDialog';
+import {
+  useAuthStore,
+  useConnectionStore,
+  useQuotaStore,
+  useNavigationStore,
+  useUpdateStore,
+} from './stores';
 
 export const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentRoute, setCurrentRoute] = useState<Route>('dashboard');
-  const [connected, setConnected] = useState(false);
-  const [quotaUsed, setQuotaUsed] = useState(0);
-  const [quotaTotal, setQuotaTotal] = useState(0);
-  const [activeProxiesCount, setActiveProxiesCount] = useState(0);
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [error, setError] = useState<string | undefined>();
+  // Store hooks
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const checkingAuth = useAuthStore((state) => state.checkingAuth);
+  const userEmail = useAuthStore((state) => state.userEmail);
+  const error = useAuthStore((state) => state.error);
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const register = useAuthStore((state) => state.register);
+  const verifyOtp = useAuthStore((state) => state.verifyOtp);
+  const resendOtp = useAuthStore((state) => state.resendOtp);
+  const setError = useAuthStore((state) => state.setError);
+  const setLoggedIn = useAuthStore((state) => state.setLoggedIn);
+
+  const connected = useConnectionStore((state) => state.connected);
+  const connect = useConnectionStore((state) => state.connect);
+  const disconnect = useConnectionStore((state) => state.disconnect);
+  const reconnect = useConnectionStore((state) => state.reconnect);
+  const checkStatus = useConnectionStore((state) => state.checkStatus);
+  const setConnected = useConnectionStore((state) => state.setConnected);
+
+  const quotaUsed = useQuotaStore((state) => state.quotaUsed);
+  const quotaTotal = useQuotaStore((state) => state.quotaTotal);
+  const activeProxiesCount = useQuotaStore((state) => state.activeProxiesCount);
+  const setQuota = useQuotaStore((state) => state.setQuota);
+  const loadDashboardData = useQuotaStore((state) => state.loadDashboardData);
+
+  const currentRoute = useNavigationStore((state) => state.currentRoute);
+  const navigateTo = useNavigationStore((state) => state.navigateTo);
+
+  const updateInfo = useUpdateStore((state) => state.updateInfo);
+  const showUpdateDialog = useUpdateStore((state) => state.showUpdateDialog);
+  const isDownloading = useUpdateStore((state) => state.isDownloading);
+  const downloadProgress = useUpdateStore((state) => state.downloadProgress);
+  const isDownloaded = useUpdateStore((state) => state.isDownloaded);
+  const isInstalling = useUpdateStore((state) => state.isInstalling);
+  const setUpdateInfo = useUpdateStore((state) => state.setUpdateInfo);
+  const showDialog = useUpdateStore((state) => state.showDialog);
+  const closeDialog = useUpdateStore((state) => state.closeDialog);
+  const downloadUpdate = useUpdateStore((state) => state.downloadUpdate);
+  const installUpdate = useUpdateStore((state) => state.installUpdate);
+  const setDownloadProgress = useUpdateStore((state) => state.setDownloadProgress);
+
+  // Local state for register dialog
   const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
@@ -42,14 +85,16 @@ export const App: React.FC = () => {
       if (hasAPI && typeof win.electronAPI === 'object') {
         console.log('[Renderer] ✅ electronAPI found! Methods:', Object.keys(win.electronAPI));
         console.log('[Renderer] Calling checkAuth...');
-        win.electronAPI.checkAuth().then((authenticated: boolean) => {
-          console.log('[Renderer] checkAuth result:', authenticated);
-          if (authenticated) {
-            setIsLoggedIn(true);
-            loadDashboardData();
-            // Check proxy status when authenticated
-            checkProxyStatus();
-          }
+        checkAuth().then(() => {
+          // Use setTimeout to ensure state is updated
+          setTimeout(() => {
+            const loggedIn = useAuthStore.getState().isLoggedIn;
+            if (loggedIn) {
+              loadDashboardData();
+              // Check proxy status when authenticated
+              checkStatus();
+            }
+          }, 100);
         }).catch((err: any) => {
           console.error('[Renderer] checkAuth error:', err);
         });
@@ -81,25 +126,16 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const checkProxyStatus = async () => {
-      try {
-        const result = await window.electronAPI?.checkStatus();
-        if (result) {
-          setConnected(result.connected);
-        }
-      } catch (err) {
-        console.error('[Renderer] Failed to check proxy status:', err);
-      }
-    };
-
     // Check immediately
-    checkProxyStatus();
+    checkStatus();
 
     // Check every 2 seconds
-    const interval = setInterval(checkProxyStatus, 2000);
+    const interval = setInterval(() => {
+      checkStatus();
+    }, 2000);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn]);
+  }, [isLoggedIn, checkStatus]);
 
   // Refresh dashboard data periodically
   useEffect(() => {
@@ -111,150 +147,55 @@ export const App: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn]);
+  }, [isLoggedIn, loadDashboardData]);
 
-  const loadDashboardData = async () => {
-    try {
-      // Load profile
-      const profile = await window.electronAPI?.getProfile();
-      if (profile) {
-        setUserEmail(profile.email);
-      }
-
-      // Load quota
-      const quota = await window.electronAPI?.getQuota();
-      if (quota) {
-        setQuotaUsed(quota.used);
-        setQuotaTotal(quota.total);
-      }
-
-      // Load active proxies count
-      const count = await window.electronAPI?.getActiveProxiesCount();
-      if (count !== undefined) {
-        setActiveProxiesCount(count);
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-    }
-  };
-
-  const handleRegister = async (email: string, password: string): Promise<{ success: boolean; message?: string; error?: string }> => {
-    console.log('[Renderer] handleRegister called with email:', email);
+  // Listen for update events from main process
+  useEffect(() => {
+    // Use electron's IPC via window.require for renderer process
+    const electron = (window as any).require?.('electron');
+    const ipcRenderer = electron?.ipcRenderer;
     
-    if (!window.electronAPI) {
-      const errorMsg = 'electronAPI is not available. Please restart the app.';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-
-    try {
-      setError(undefined);
-      const result = await window.electronAPI.register(email, password);
-      return result || { success: false, error: 'Registration failed' };
-    } catch (err: any) {
-      console.error('[Renderer] Register error:', err);
-      const errorMsg = err.message || 'Registration failed';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const handleVerifyOtp = async (email: string, code: string, password: string): Promise<{ success: boolean; message?: string; error?: string }> => {
-    console.log('[Renderer] handleVerifyOtp called');
-    
-    if (!window.electronAPI) {
-      const errorMsg = 'electronAPI is not available. Please restart the app.';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-
-    try {
-      setError(undefined);
-      const result = await window.electronAPI.verifyOtp(email, code, password);
-      return result || { success: false, error: 'OTP verification failed' };
-    } catch (err: any) {
-      console.error('[Renderer] Verify OTP error:', err);
-      const errorMsg = err.message || 'OTP verification failed';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const handleResendOtp = async (email: string): Promise<{ success: boolean; message?: string; error?: string }> => {
-    console.log('[Renderer] handleResendOtp called');
-    
-    if (!window.electronAPI) {
-      const errorMsg = 'electronAPI is not available. Please restart the app.';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-
-    try {
-      setError(undefined);
-      const result = await window.electronAPI.resendOtp(email);
-      return result || { success: false, error: 'Resend OTP failed' };
-    } catch (err: any) {
-      console.error('[Renderer] Resend OTP error:', err);
-      const errorMsg = err.message || 'Resend OTP failed';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const handleLogin = async (email: string, password: string) => {
-    console.log('[Renderer] handleLogin called with email:', email);
-    console.log('[Renderer] electronAPI available:', !!window.electronAPI);
-    console.log('[Renderer] window.electronAPI type:', typeof window.electronAPI);
-    
-    // Wait for electronAPI if not available yet
-    let retries = 0;
-    while (!window.electronAPI && retries < 10) {
-      console.log(`[Renderer] Waiting for electronAPI... (attempt ${retries + 1}/10)`);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      retries++;
-    }
-    
-    if (!window.electronAPI) {
-      const errorMsg = 'electronAPI is not available. Please restart the app.';
-      console.error('[Renderer]', errorMsg);
-      console.error('[Renderer] window object:', window);
-      console.error('[Renderer] Available window keys:', Object.keys(window).filter(k => k.includes('electron') || k.includes('API')));
-      setError(errorMsg);
+    if (!ipcRenderer) {
+      console.warn('[Renderer] IPC renderer not available, update notifications may not work');
       return;
     }
 
-    try {
-      setError(undefined);
-      console.log('[Renderer] Calling window.electronAPI.login...');
-      const result = await window.electronAPI.login(email, password);
-      console.log('[Renderer] Login result received:', result);
-      
-      if (result?.success) {
-        setIsLoggedIn(true);
-        setQuotaUsed(result.quotaUsed || 0);
-        setQuotaTotal(result.quotaTotal || 0);
-        loadDashboardData();
-      } else {
-        setError(result?.error || 'Login failed');
+    const handleUpdateAvailable = (event: any, info: any) => {
+      console.log('[Renderer] Update available:', info);
+      setUpdateInfo(info);
+      showDialog();
+    };
+
+    const handleDownloadProgress = (event: any, progress: number) => {
+      console.log('[Renderer] Download progress:', progress);
+      setDownloadProgress(progress);
+    };
+
+    ipcRenderer.on('update:available', handleUpdateAvailable);
+    ipcRenderer.on('update:download-progress', handleDownloadProgress);
+
+    return () => {
+      ipcRenderer.removeListener('update:available', handleUpdateAvailable);
+      ipcRenderer.removeListener('update:download-progress', handleDownloadProgress);
+    };
+  }, [setUpdateInfo, showDialog, setDownloadProgress]);
+
+  const handleLogin = async (email: string, password: string) => {
+    const result = await login(email, password);
+    // After successful login, check if logged in and load dashboard data
+    if (result?.success) {
+      // Set quota from login result if available
+      if (result.quotaUsed !== undefined && result.quotaTotal !== undefined) {
+        setQuota(result.quotaUsed, result.quotaTotal);
       }
-    } catch (err: any) {
-      console.error('[Renderer] Login error:', err);
-      setError(err.message || 'Login failed');
+      loadDashboardData();
     }
   };
 
   const handleConnect = async () => {
     try {
       setError(undefined);
-      console.log('[Renderer] Connecting to Gateway...');
-      const result = await window.electronAPI?.connect();
-      if (result?.connected) {
-        setConnected(true);
-        console.log('[Renderer] Gateway connection ready');
-      } else {
-        console.error('[Renderer] Failed to connect to gateway');
-        setError('Failed to connect to gateway');
-      }
+      await connect();
     } catch (err: any) {
       console.error('[Renderer] Connect error:', err);
       const errorMsg = err.message || 'Failed to connect';
@@ -263,31 +204,18 @@ export const App: React.FC = () => {
       // If not authenticated, suggest to login again
       if (errorMsg.includes('Not authenticated')) {
         // Optionally, you could auto-logout here
-        // setIsLoggedIn(false);
+        // setLoggedIn(false);
       }
     }
   };
 
   const handleDisconnect = async () => {
-    try {
-      await window.electronAPI?.disconnect();
-      setConnected(false);
-    } catch (err) {
-      console.error('Failed to disconnect:', err);
-    }
+    await disconnect();
   };
 
   const handleReconnect = async () => {
     try {
-      console.log('[Renderer] Reconnecting to Gateway...');
-      const result = await window.electronAPI?.reconnect();
-      if (result?.connected) {
-        setConnected(true);
-        console.log('[Renderer] Gateway reconnected successfully');
-      } else {
-        console.error('[Renderer] Failed to reconnect to gateway');
-        setError('Failed to reconnect to gateway');
-      }
+      await reconnect();
     } catch (err: any) {
       console.error('[Renderer] Reconnect error:', err);
       setError(err.message || 'Failed to reconnect');
@@ -295,101 +223,225 @@ export const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    await logout();
+    setConnected(false);
+    setQuota(0, 0);
+  };
+
+  const handleDownloadUpdate = async (downloadUrl: string) => {
     try {
-      await window.electronAPI?.logout();
-      setIsLoggedIn(false);
-      setConnected(false);
-      setQuotaUsed(0);
-      setQuotaTotal(0);
-      setError(undefined);
-    } catch (err) {
-      console.error('Failed to logout:', err);
+      await downloadUpdate(downloadUrl);
+    } catch (error: any) {
+      console.error('Failed to download update:', error);
+      setError(error.message || 'Failed to download update');
     }
   };
+
+  const handleInstallUpdate = async () => {
+    try {
+      await installUpdate();
+    } catch (error: any) {
+      console.error('Failed to install update:', error);
+      setError(error.message || 'Failed to install update');
+    }
+  };
+
+  // Hiển thị loading khi đang check auth, không hiển thị login ngay
+  if (checkingAuth) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark font-display text-white flex h-screen w-full items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-4"></div>
+          <p className="text-[#93adc8]">Đang kiểm tra đăng nhập...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     if (showRegister) {
       return (
-        <Register
-          onRegister={handleRegister}
-          onVerifyOtp={handleVerifyOtp}
-          onResendOtp={handleResendOtp}
-          onBackToLogin={() => setShowRegister(false)}
-          error={error}
-        />
+        <>
+          <Register
+            onRegister={register}
+            onVerifyOtp={verifyOtp}
+            onResendOtp={resendOtp}
+            onBackToLogin={() => setShowRegister(false)}
+            error={error}
+          />
+          {showUpdateDialog && updateInfo && (
+            <UpdateDialog
+              updateInfo={updateInfo}
+              open={showUpdateDialog}
+              onClose={closeDialog}
+              onDownload={handleDownloadUpdate}
+              downloadProgress={downloadProgress}
+              isDownloading={isDownloading}
+              isDownloaded={isDownloaded}
+              onInstall={handleInstallUpdate}
+              isInstalling={isInstalling}
+            />
+          )}
+        </>
       );
     }
-    return <Login onLogin={handleLogin} onRegister={() => setShowRegister(true)} error={error} />;
+    return (
+      <>
+        <Login onLogin={handleLogin} onRegister={() => setShowRegister(true)} error={error} />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
+    );
   }
 
   if (currentRoute === 'proxies') {
     return (
-      <Proxies
-        userEmail={userEmail}
-        onLogout={handleLogout}
-        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
-        onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
-        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
-        onNavigateToSettings={() => setCurrentRoute('settings')}
-      />
+      <>
+        <Proxies
+          onLogout={handleLogout}
+        />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
     );
   }
 
   if (currentRoute === 'port-forwards') {
     return (
-      <PortForwards
-        userEmail={userEmail}
-        onLogout={handleLogout}
-        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
-        onNavigateToProxies={() => setCurrentRoute('proxies')}
-        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
-        onNavigateToSettings={() => setCurrentRoute('settings')}
-      />
+      <>
+        <PortForwards
+          onLogout={handleLogout}
+        />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
+    );
+  }
+
+  if (currentRoute === 'rotating-proxies') {
+    return (
+      <>
+        <RotatingProxies
+          onLogout={handleLogout}
+        />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
     );
   }
 
   if (currentRoute === 'payment-history') {
     return (
-      <PaymentHistory
-        userEmail={userEmail}
-        onLogout={handleLogout}
-        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
-        onNavigateToProxies={() => setCurrentRoute('proxies')}
-        onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
-        onNavigateToSettings={() => setCurrentRoute('settings')}
-      />
+      <>
+        <PaymentHistory
+          onLogout={handleLogout}
+        />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
     );
   }
 
   if (currentRoute === 'settings') {
     return (
-      <Settings
-        userEmail={userEmail}
-        onLogout={handleLogout}
-        onNavigateToDashboard={() => setCurrentRoute('dashboard')}
-        onNavigateToProxies={() => setCurrentRoute('proxies')}
-        onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
-        onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
-      />
+      <>
+        <Settings
+          onLogout={handleLogout}
+        />
+        {showUpdateDialog && updateInfo && (
+          <UpdateDialog
+            updateInfo={updateInfo}
+            open={showUpdateDialog}
+            onClose={closeDialog}
+            onDownload={handleDownloadUpdate}
+            downloadProgress={downloadProgress}
+            isDownloading={isDownloading}
+            isDownloaded={isDownloaded}
+            onInstall={handleInstallUpdate}
+            isInstalling={isInstalling}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <Dashboard
-      connected={connected}
-      quotaUsed={quotaUsed}
-      quotaTotal={quotaTotal}
-      activeProxiesCount={activeProxiesCount}
-      userEmail={userEmail}
-      onConnect={handleConnect}
-      onDisconnect={handleDisconnect}
-      onReconnect={handleReconnect}
-      onLogout={handleLogout}
-      onNavigateToProxies={() => setCurrentRoute('proxies')}
-      onNavigateToPortForwards={() => setCurrentRoute('port-forwards')}
-      onNavigateToPaymentHistory={() => setCurrentRoute('payment-history')}
-      onNavigateToSettings={() => setCurrentRoute('settings')}
-    />
+    <>
+      <Dashboard
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+        onReconnect={handleReconnect}
+        onLogout={handleLogout}
+      />
+      {showUpdateDialog && updateInfo && (
+        <UpdateDialog
+          updateInfo={updateInfo}
+          open={showUpdateDialog}
+          onClose={closeDialog}
+          onDownload={handleDownloadUpdate}
+          downloadProgress={downloadProgress}
+          isDownloading={isDownloading}
+          isDownloaded={isDownloaded}
+          onInstall={handleInstallUpdate}
+          isInstalling={isInstalling}
+        />
+      )}
+    </>
   );
 };
 
@@ -437,6 +489,9 @@ declare global {
         list: () => Promise<string[]>;
         startAll: () => Promise<{ success: boolean; count: number }>;
         stopAll: () => Promise<{ success: boolean }>;
+        changePort: (mappingId: string, newPort: number) => Promise<any>;
+        getGateways: () => Promise<Array<{ id: string; ip: string }>>;
+        getAvailablePorts: () => Promise<Array<{ port: number; gatewayId: string; gatewayIp: string; portId: string }>>;
       };
       upstreams: {
         getAvailable: () => Promise<any[]>;
@@ -447,7 +502,28 @@ declare global {
         getOrders: () => Promise<any[]>;
         getOrderStatus: (orderCode: string) => Promise<any>;
       };
+      update?: {
+        checkForUpdates: () => Promise<{
+          hasUpdate: boolean;
+          version?: string;
+          platform?: string;
+          downloadUrl?: string;
+          releaseNotes?: string;
+          isMandatory?: boolean;
+          fileSize?: number;
+          checksum?: string;
+          createdAt?: string;
+        }>;
+        downloadUpdate: (downloadUrl: string) => Promise<string>;
+        installUpdate: (filePath: string) => Promise<{ success: boolean }>;
+        getUpdateStatus: () => Promise<{
+          status: 'idle' | 'checking' | 'downloading' | 'downloaded' | 'installing' | 'error';
+          progress?: number;
+          error?: string;
+          downloadedPath?: string;
+        }>;
+        getCurrentVersion: () => Promise<string>;
+      };
     };
   }
 }
-

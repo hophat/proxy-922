@@ -6,6 +6,24 @@ interface CreateUpstreamOrderDto {
   upstreamIds: string[];
   gatewayId?: string;
   duration: '24h' | '7d' | '30d';
+  selectedPorts?: number[]; // Optional: Array of port numbers (3000-10000) mà user chọn
+}
+
+interface CreateRotatingProxyOrderDto {
+  proxyCount: number;
+  duration: '1d' | '3d' | '7d' | '15d';
+}
+
+interface RotatingProxyResponse {
+  id: string;
+  domain: string;
+  ip: string;
+  port: number | null;
+  mappingId: string | null;
+  rotationInterval: number | null;
+  expiresAt: string;
+  duration: string;
+  status: string;
 }
 
 interface PaymentOrderResponse {
@@ -189,6 +207,167 @@ export async function getPaymentOrderStatus(
     throw new Error(errorMessage);
   } catch (err: any) {
     console.error('[Payments] Failed to get payment order status:', err);
+    throw err;
+  }
+}
+
+export async function createRotatingProxyOrder(
+  backendURL: string,
+  createDto: CreateRotatingProxyOrderDto,
+): Promise<PaymentOrderResponse> {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/rotating-proxy/order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(createDto),
+    });
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return JSON.parse(response.body);
+    }
+
+    let errorMessage = `HTTP ${response.statusCode}`;
+    try {
+      const error = JSON.parse(response.body);
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      if (response.body) {
+        errorMessage = response.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  } catch (err: any) {
+    console.error('[Payments] Failed to create rotating proxy order:', err);
+    throw err;
+  }
+}
+
+export async function getMyRotatingProxies(
+  backendURL: string,
+): Promise<RotatingProxyResponse[]> {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/rotating-proxy/my`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.statusCode === 200) {
+      const data = JSON.parse(response.body);
+      return Array.isArray(data) ? data : [];
+    }
+
+    let errorMessage = `HTTP ${response.statusCode}`;
+    try {
+      const error = JSON.parse(response.body);
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      if (response.body) {
+        errorMessage = response.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  } catch (err: any) {
+    console.error('[Payments] Failed to get rotating proxies:', err);
+    throw err;
+  }
+}
+
+export async function updateRotatingProxyRotationInterval(
+  backendURL: string,
+  id: string,
+  rotationInterval: number,
+): Promise<RotatingProxyResponse> {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/rotating-proxy/${id}/rotation-interval`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ rotationInterval }),
+    });
+
+    if (response.statusCode === 200) {
+      return JSON.parse(response.body);
+    }
+
+    let errorMessage = `HTTP ${response.statusCode}`;
+    try {
+      const error = JSON.parse(response.body);
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      if (response.body) {
+        errorMessage = response.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  } catch (err: any) {
+    console.error('[Payments] Failed to update rotating proxy rotation interval:', err);
+    throw err;
+  }
+}
+
+export async function updateRotatingProxyPort(
+  backendURL: string,
+  id: string,
+  port: number,
+): Promise<RotatingProxyResponse> {
+  const token = auth.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    const response = await httpRequest(`${backendURL}/rotating-proxy/${id}/port`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ port }),
+    });
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return JSON.parse(response.body);
+    }
+
+    let errorMessage = `HTTP ${response.statusCode}`;
+    try {
+      const error = JSON.parse(response.body);
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      if (response.body) {
+        errorMessage = response.body;
+      }
+    }
+
+    throw new Error(errorMessage);
+  } catch (err: any) {
+    console.error('[Payments] Failed to update rotating proxy port:', err);
     throw err;
   }
 }

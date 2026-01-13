@@ -29,11 +29,27 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Check if order is already paid when dialog opens
+  useEffect(() => {
+    if (open && order.status === 'paid' && !showSuccessPopup) {
+      setShowSuccessPopup(true);
+      // Auto close popup after 5 seconds
+      const timer = setTimeout(() => {
+        setShowSuccessPopup(false);
+        onSuccess();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [open, order.status]);
+
   useEffect(() => {
     if (!open) {
+      // Reset state when dialog closes
+      setShowSuccessPopup(false);
       return;
     }
 
@@ -69,7 +85,13 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
           if (countdownIntervalRef.current) {
             clearInterval(countdownIntervalRef.current);
           }
-          onSuccess();
+          // Show success popup
+          setShowSuccessPopup(true);
+          // Auto close popup after 5 seconds
+          setTimeout(() => {
+            setShowSuccessPopup(false);
+            onSuccess();
+          }, 5000);
         } else if (updatedOrder && updatedOrder.status === 'expired') {
           // Order expired
           if (pollingIntervalRef.current) {
@@ -121,8 +143,40 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-      <div className="bg-[#1a2632] border border-[#344d65] rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <>
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70]">
+          <div className="bg-[#1a2632] border-2 border-green-500 rounded-xl p-8 w-full max-w-md shadow-2xl animate-pulse">
+            <div className="text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-green-400" style={{ fontSize: '48px' }}>
+                    check_circle
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Chuyển khoản thành công!</h3>
+              <p className="text-[#93adc8] mb-6">
+                Hệ thống đã nhận được thanh toán của bạn. Đơn hàng đang được xử lý...
+              </p>
+              <button
+                onClick={() => {
+                  setShowSuccessPopup(false);
+                  onSuccess();
+                }}
+                className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Dialog */}
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+        <div className="bg-[#1a2632] border border-[#344d65] rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Thanh toán</h2>
           <button
@@ -254,5 +308,6 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
         </button>
       </div>
     </div>
+    </>
   );
 };

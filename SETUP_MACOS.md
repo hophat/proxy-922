@@ -27,7 +27,7 @@ brew install go
 ## Bước 1: Clone và Setup Project
 
 ```bash
-cd /Users/macbookpro/Gulagi/kd-outsource/proxy992
+cd /Users/macbookpro/Gulagi/kd-outsource/Proxy96
 ```
 
 ## Bước 2: Tạo File Môi Trường
@@ -233,7 +233,7 @@ docker-compose down -v
 docker-compose rm -f
 
 # Xóa volumes
-docker volume rm proxy992_postgres_data proxy992_redis_data
+docker volume rm Proxy96_postgres_data Proxy96_redis_data
 
 # Build lại từ đầu
 docker-compose build --no-cache
@@ -248,7 +248,7 @@ File `.env` mẫu:
 # Database
 POSTGRES_USER=proxyadmin
 POSTGRES_PASSWORD=changeme
-POSTGRES_DB=proxy992
+POSTGRES_DB=Proxy96
 POSTGRES_PORT=5432
 
 # Redis
@@ -285,7 +285,7 @@ Tạo file `start.sh`:
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Proxy992 Platform..."
+echo "🚀 Starting Proxy96 Platform..."
 
 # Check Docker
 if ! docker info > /dev/null 2>&1; then

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { GatewayPort, GatewayPortStatus } from './gateway-ports.entity';
 import { GatewaysService } from '../gateways/gateways.service';
 
@@ -100,6 +100,79 @@ export class GatewayPortsService {
         gatewayId,
         status: GatewayPortStatus.AVAILABLE,
       },
+    });
+  }
+
+  /**
+   * Tìm port available trong range cho một gateway
+   */
+  async findAvailablePortsInRange(
+    gatewayId: string,
+    startPort: number,
+    endPort: number,
+  ): Promise<GatewayPort[]> {
+    return this.portRepository.find({
+      where: {
+        gatewayId,
+        port: Between(startPort, endPort),
+        status: GatewayPortStatus.AVAILABLE,
+      },
+      order: { port: 'ASC' },
+    });
+  }
+
+  /**
+   * Tìm port available từ 3000-10000 cho một gateway
+   */
+  async findAvailablePortsForSelection(gatewayId: string): Promise<GatewayPort[]> {
+    return this.findAvailablePortsInRange(gatewayId, 3000, 10000);
+  }
+
+  /**
+   * Tìm tất cả port available từ TẤT CẢ gateways trong range 3000-10000
+   * Bao gồm thông tin gateway IP
+   */
+  async findAllAvailablePortsInRange(
+    startPort: number = 3000,
+    endPort: number = 10000,
+  ): Promise<Array<{ port: number; gatewayId: string; gatewayIp: string; portId: string }>> {
+    const ports = await this.portRepository.find({
+      where: {
+        port: Between(startPort, endPort),
+        status: GatewayPortStatus.AVAILABLE,
+      },
+      relations: ['gateway'],
+      order: { port: 'ASC' },
+    });
+
+    return ports.map((p) => ({
+      port: p.port,
+      gatewayId: p.gatewayId,
+      gatewayIp: p.gateway.ip,
+      portId: p.id,
+    }));
+  }
+
+  /**
+   * Tìm port by ID và trả về với gateway info
+   */
+  async findPortWithGateway(portId: string): Promise<GatewayPort | null> {
+    return this.portRepository.findOne({
+      where: { id: portId },
+      relations: ['gateway'],
+    });
+  }
+
+  /**
+   * Tìm port by port number và gatewayId
+   */
+  async findPortByNumber(gatewayId: string, port: number): Promise<GatewayPort | null> {
+    return this.portRepository.findOne({
+      where: {
+        gatewayId,
+        port,
+      },
+      relations: ['gateway'],
     });
   }
 }

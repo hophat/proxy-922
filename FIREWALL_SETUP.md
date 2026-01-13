@@ -69,7 +69,7 @@ nc -zv 14.225.254.130 8080
 docker ps | grep gateway
 
 # Kiểm tra logs
-docker logs proxy992-gateway
+docker logs Proxy96-gateway
 
 # Test kết nối TLS
 openssl s_client -connect 14.225.254.130:8080 -verify_return_error

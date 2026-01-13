@@ -1,6 +1,6 @@
 # Hướng dẫn Deploy Gateway
 
-Tài liệu này hướng dẫn cách deploy Gateway service của Proxy992 Platform. Gateway là một service Go được viết để xử lý kết nối TLS từ clients và forward đến SOCKS5 proxy pool.
+Tài liệu này hướng dẫn cách deploy Gateway service của Proxy96 Platform. Gateway là một service Go được viết để xử lý kết nối TLS từ clients và forward đến SOCKS5 proxy pool.
 
 ## Tổng quan
 
@@ -85,7 +85,7 @@ docker compose build gateway
 
 # Hoặc build từ thư mục gateway
 cd gateway
-docker build -t proxy992-gateway .
+docker build -t Proxy96-gateway .
 ```
 
 ### 1.5. Start Gateway
@@ -131,8 +131,8 @@ Deploy Gateway như một standalone service (không dùng Docker).
 
 ```bash
 # Clone repository
-git clone <repository-url> proxy992
-cd proxy992/gateway
+git clone <repository-url> Proxy96
+cd Proxy96/gateway
 
 # Build binary
 go build -ldflags="-w -s" -o gateway main.go
@@ -157,14 +157,14 @@ GOOS=windows GOARCH=amd64 go build -ldflags="-w -s" -o gateway-windows.exe main.
 
 ```bash
 # Copy binary
-scp gateway user@server:/opt/proxy992-gateway/
+scp gateway user@server:/opt/Proxy96-gateway/
 
 # Hoặc upload qua FTP/SFTP
 ```
 
 ### 2.4. Setup Environment Variables
 
-Tạo file `/opt/proxy992-gateway/.env` hoặc export environment variables:
+Tạo file `/opt/Proxy96-gateway/.env` hoặc export environment variables:
 
 ```bash
 export GATEWAY_PORT=8080
@@ -172,8 +172,8 @@ export BACKEND_API_URL=http://your-backend-api:3300
 export REDIS_HOST=your-redis-host
 export REDIS_PORT=6379
 export REDIS_PASSWORD=your-redis-password
-export TLS_CERT_PATH=/opt/proxy992-gateway/certs/cert.pem
-export TLS_KEY_PATH=/opt/proxy992-gateway/certs/key.pem
+export TLS_CERT_PATH=/opt/Proxy96-gateway/certs/cert.pem
+export TLS_KEY_PATH=/opt/Proxy96-gateway/certs/key.pem
 export STICKY_TTL=900
 export HEALTH_CHECK_INTERVAL=45
 ```
@@ -182,33 +182,33 @@ export HEALTH_CHECK_INTERVAL=45
 
 ```bash
 # Tạo thư mục
-mkdir -p /opt/proxy992-gateway/certs
+mkdir -p /opt/Proxy96-gateway/certs
 
 # Copy certificates
-cp /path/to/cert.pem /opt/proxy992-gateway/certs/cert.pem
-cp /path/to/key.pem /opt/proxy992-gateway/certs/key.pem
+cp /path/to/cert.pem /opt/Proxy96-gateway/certs/cert.pem
+cp /path/to/key.pem /opt/Proxy96-gateway/certs/key.pem
 
 # Set permissions
-chmod 644 /opt/proxy992-gateway/certs/cert.pem
-chmod 600 /opt/proxy992-gateway/certs/key.pem
-chown gateway:gateway /opt/proxy992-gateway/certs/*.pem
+chmod 644 /opt/Proxy96-gateway/certs/cert.pem
+chmod 600 /opt/Proxy96-gateway/certs/key.pem
+chown gateway:gateway /opt/Proxy96-gateway/certs/*.pem
 ```
 
 ### 2.6. Tạo Systemd Service (Linux)
 
-Tạo file `/etc/systemd/system/proxy992-gateway.service`:
+Tạo file `/etc/systemd/system/Proxy96-gateway.service`:
 
 ```ini
 [Unit]
-Description=Proxy992 Gateway Service
+Description=Proxy96 Gateway Service
 After=network.target redis.service
 
 [Service]
 Type=simple
 User=gateway
 Group=gateway
-WorkingDirectory=/opt/proxy992-gateway
-ExecStart=/opt/proxy992-gateway/gateway
+WorkingDirectory=/opt/Proxy96-gateway
+ExecStart=/opt/Proxy96-gateway/gateway
 Restart=always
 RestartSec=10
 
@@ -218,8 +218,8 @@ Environment="BACKEND_API_URL=http://localhost:3300"
 Environment="REDIS_HOST=localhost"
 Environment="REDIS_PORT=6379"
 Environment="REDIS_PASSWORD=your-redis-password"
-Environment="TLS_CERT_PATH=/opt/proxy992-gateway/certs/cert.pem"
-Environment="TLS_KEY_PATH=/opt/proxy992-gateway/certs/key.pem"
+Environment="TLS_CERT_PATH=/opt/Proxy96-gateway/certs/cert.pem"
+Environment="TLS_KEY_PATH=/opt/Proxy96-gateway/certs/key.pem"
 Environment="STICKY_TTL=900"
 Environment="HEALTH_CHECK_INTERVAL=45"
 
@@ -230,7 +230,7 @@ PrivateTmp=true
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=proxy992-gateway
+SyslogIdentifier=Proxy96-gateway
 
 [Install]
 WantedBy=multi-user.target
@@ -246,16 +246,16 @@ sudo useradd -r -s /bin/false gateway
 sudo systemctl daemon-reload
 
 # Enable service (tự động start khi boot)
-sudo systemctl enable proxy992-gateway
+sudo systemctl enable Proxy96-gateway
 
 # Start service
-sudo systemctl start proxy992-gateway
+sudo systemctl start Proxy96-gateway
 
 # Check status
-sudo systemctl status proxy992-gateway
+sudo systemctl status Proxy96-gateway
 
 # Xem logs
-sudo journalctl -u proxy992-gateway -f
+sudo journalctl -u Proxy96-gateway -f
 ```
 
 ### 2.8. Verify Deployment
@@ -268,7 +268,7 @@ openssl s_client -connect localhost:8080
 ps aux | grep gateway
 
 # Check logs
-sudo journalctl -u proxy992-gateway --since "10 minutes ago"
+sudo journalctl -u Proxy96-gateway --since "10 minutes ago"
 ```
 
 ## TLS Certificates Setup
@@ -397,13 +397,13 @@ docker compose logs --since "2024-01-01T00:00:00" gateway
 
 ```bash
 # Xem logs real-time
-sudo journalctl -u proxy992-gateway -f
+sudo journalctl -u Proxy96-gateway -f
 
 # Xem logs từ hôm nay
-sudo journalctl -u proxy992-gateway --since today
+sudo journalctl -u Proxy96-gateway --since today
 
 # Xem logs với filter
-sudo journalctl -u proxy992-gateway -p err
+sudo journalctl -u Proxy96-gateway -p err
 ```
 
 ### Health Check
@@ -468,7 +468,7 @@ telnet your-redis-host 6379
 
 ```bash
 # Check resource usage
-docker stats proxy992-gateway
+docker stats Proxy96-gateway
 
 # Hoặc với standalone
 top -p $(pgrep gateway)
@@ -510,7 +510,7 @@ docker compose up -d --no-deps gateway
 
 ```bash
 # Stop service
-sudo systemctl stop proxy992-gateway
+sudo systemctl stop Proxy96-gateway
 
 # Backup current binary
 cp gateway gateway.backup
@@ -519,10 +519,10 @@ cp gateway gateway.backup
 go build -ldflags="-w -s" -o gateway main.go
 
 # Start service
-sudo systemctl start proxy992-gateway
+sudo systemctl start Proxy96-gateway
 
 # Verify
-sudo systemctl status proxy992-gateway
+sudo systemctl status Proxy96-gateway
 ```
 
 ### Restart Gateway
@@ -532,7 +532,7 @@ sudo systemctl status proxy992-gateway
 docker compose restart gateway
 
 # Systemd
-sudo systemctl restart proxy992-gateway
+sudo systemctl restart Proxy96-gateway
 ```
 
 ## Performance Tuning
@@ -586,7 +586,7 @@ sudo sysctl -p
 ## Support
 
 Nếu gặp vấn đề:
-1. Check logs: `docker compose logs gateway` hoặc `journalctl -u proxy992-gateway`
+1. Check logs: `docker compose logs gateway` hoặc `journalctl -u Proxy96-gateway`
 2. Verify certificates và permissions
 3. Test network connectivity (Backend API, Redis)
 4. Check resource usage

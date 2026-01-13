@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"proxy992-gateway/internal/traffic"
+	"Proxy96-gateway/internal/traffic"
 )
 
 func min(a, b int) int {

@@ -160,6 +160,20 @@ export interface PortMapping {
   updatedAt?: string;
 }
 
+// App Version types
+export interface AppVersion {
+  id: string;
+  version: string;
+  platform: string; // 'win32' | 'darwin' | 'linux'
+  downloadUrl: string;
+  releaseNotes?: string;
+  isMandatory: boolean;
+  fileSize?: number;
+  checksum?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 // Stats types
 export interface Stats {
   totalUsers: number;

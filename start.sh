@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Proxy992 Platform..."
+echo "🚀 Starting Proxy96 Platform..."
 
 # Check Docker
 if ! docker info > /dev/null 2>&1; then
@@ -30,7 +30,7 @@ if [ ! -f .env ]; then
 # Database Configuration
 POSTGRES_USER=proxyadmin
 POSTGRES_PASSWORD=changeme
-POSTGRES_DB=proxy992
+POSTGRES_DB=Proxy96
 POSTGRES_PORT=5432
 
 # Redis Configuration
@@ -47,6 +47,9 @@ JWT_EXPIRES_IN=7d
 GATEWAY_PORT=8080
 STICKY_TTL=900
 HEALTH_CHECK_INTERVAL=45
+
+# Rotating Proxy Configuration
+ROTATING_PROXY_DOMAIN=proxy.yourdomain.com
 EOF
   fi
   echo "⚠️  Please edit .env file with your settings"

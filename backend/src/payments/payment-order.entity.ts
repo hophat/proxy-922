@@ -20,6 +20,7 @@ export enum PaymentOrderStatus {
 export enum PurchaseType {
   UPSTREAM = 'upstream',
   PORT = 'port',
+  ROTATING_PROXY = 'rotating_proxy',
 }
 
 @Entity('payment_orders')

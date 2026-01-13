@@ -7,6 +7,7 @@ import type {
   Purchase,
   PaymentOrder,
   PortMapping,
+  AppVersion,
   Stats,
   ProxyStatus,
   GatewayStatus,
@@ -188,5 +189,42 @@ export const adminService = {
 
   async releasePortMapping(id: string): Promise<void> {
     return apiClient.post(`/admin/port-mappings/${id}/release`);
+  },
+
+  // App Versions
+  async getAppVersions(): Promise<AppVersion[]> {
+    return apiClient.get<AppVersion[]>('/app/versions');
+  },
+
+  async getAppVersion(id: string): Promise<AppVersion> {
+    return apiClient.get<AppVersion>(`/app/versions/${id}`);
+  },
+
+  async createAppVersion(data: {
+    version: string;
+    platform: string;
+    downloadUrl: string;
+    releaseNotes?: string;
+    isMandatory?: boolean;
+    fileSize?: number;
+    checksum?: string;
+  }): Promise<AppVersion> {
+    return apiClient.post<AppVersion>('/app/versions', data);
+  },
+
+  async updateAppVersion(id: string, data: Partial<{
+    version: string;
+    platform: string;
+    downloadUrl: string;
+    releaseNotes?: string;
+    isMandatory?: boolean;
+    fileSize?: number;
+    checksum?: string;
+  }>): Promise<AppVersion> {
+    return apiClient.put<AppVersion>(`/app/versions/${id}`, data);
+  },
+
+  async deleteAppVersion(id: string): Promise<void> {
+    return apiClient.delete(`/app/versions/${id}`);
   },
 };

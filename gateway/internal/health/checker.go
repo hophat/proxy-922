@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"proxy992-gateway/internal/config"
+	"Proxy96-gateway/internal/config"
 )
 
 type Checker struct {
-	backendURL     string
-	httpClient     *http.Client
-	checkInterval  int
-	ticker         *time.Ticker
-	stopChan       chan bool
+	backendURL    string
+	httpClient    *http.Client
+	checkInterval int
+	ticker        *time.Ticker
+	stopChan      chan bool
 }
 
 type Proxy struct {
@@ -234,8 +234,8 @@ func (c *Checker) socks5Handshake(conn net.Conn, username, password string) erro
 
 func (c *Checker) updateProxyStatus(proxyID string, isAlive bool) {
 	payload := map[string]interface{}{
-		"proxyId":  proxyID,
-		"isAlive":  isAlive,
+		"proxyId":   proxyID,
+		"isAlive":   isAlive,
 		"lastCheck": time.Now().Format(time.RFC3339),
 	}
 
@@ -253,4 +253,3 @@ func (c *Checker) Stop() {
 	c.ticker.Stop()
 	c.stopChan <- true
 }
-

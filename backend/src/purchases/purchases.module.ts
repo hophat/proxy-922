@@ -10,6 +10,7 @@ import { Socks5Upstream } from '../socks5-upstream/socks5-upstream.entity';
 import { GatewaysModule } from '../gateways/gateways.module';
 import { GatewayPortsModule } from '../gateway-ports/gateway-ports.module';
 import { Socks5UpstreamModule } from '../socks5-upstream/socks5-upstream.module';
+import { PortChangeHistoryModule } from '../port-change-history/port-change-history.module';
 import { AuthModule } from '../auth/auth.module';
 import { PaymentsModule } from '../payments/payments.module';
 
@@ -24,6 +25,7 @@ import { PaymentsModule } from '../payments/payments.module';
     GatewaysModule,
     GatewayPortsModule,
     Socks5UpstreamModule,
+    PortChangeHistoryModule,
     AuthModule,
     forwardRef(() => PaymentsModule),
   ],

@@ -1,5 +1,5 @@
-appId: com.proxy992.client
-productName: Proxy992 Client
+appId: com.Proxy96.client
+productName: Proxy96 Client
 directories:
   buildResources: build
   output: dist
@@ -22,7 +22,7 @@ fileAssociations: []
 win:
   target:
     - nsis
-  icon: build/icon.ico
+  icon: build/icon.png  # Will be converted to .ico automatically
   # Tối ưu kích thước cho Windows
   artifactName: "${productName} Setup ${version}.${ext}"
 
@@ -30,7 +30,7 @@ mac:
   target:
     - dmg
   category: public.app-category.utilities
-  icon: build/icon.icns
+  icon: build/icon.png  # Will be converted to .icns automatically
   # Chỉ build DMG, không build zip
   artifactName: "${productName}-${version}.${ext}"
 

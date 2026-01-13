@@ -17,7 +17,7 @@ SOURCE_PASSWORD="Tsh123qwe"
 # Thông tin database mới (target) - có thể chỉnh sửa hoặc set qua biến môi trường
 TARGET_HOST="${TARGET_HOST:-14.225.254.130}"
 TARGET_PORT="${TARGET_PORT:-5434}"
-TARGET_DB="${TARGET_DB:-proxy992_new}"
+TARGET_DB="${TARGET_DB:-Proxy992_new}"
 TARGET_USER="${TARGET_USER:-tsh_db}"
 TARGET_PASSWORD="${TARGET_PASSWORD:-Tsh123qwe}"
 

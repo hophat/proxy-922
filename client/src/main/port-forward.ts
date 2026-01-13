@@ -34,7 +34,11 @@ class PortForwardManager {
     this.gatewayPort = gatewayPort;
   }
 
-  private async httpRequest(url: string, token: string): Promise<any> {
+  private async httpRequest(
+    url: string,
+    token: string,
+    options?: { method?: string; body?: string },
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         const urlObj = new URL(url);
@@ -45,12 +49,12 @@ class PortForwardManager {
           hostname: urlObj.hostname,
           port: urlObj.port || (isHttps ? 443 : 80),
           path: urlObj.pathname + urlObj.search,
-          method: 'GET',
+          method: options?.method || 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          timeout: 5000,
+          timeout: 30000, // 30 seconds - đủ thời gian cho transaction
         };
 
         const req = client.request(requestOptions, (res) => {
@@ -59,14 +63,23 @@ class PortForwardManager {
             data += chunk;
           });
           res.on('end', () => {
-            if (res.statusCode === 200) {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
               try {
-                resolve(JSON.parse(data));
+                resolve(data ? JSON.parse(data) : {});
               } catch (err) {
-                reject(new Error('Failed to parse response'));
+                resolve({});
               }
             } else {
-              reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+              let errorMessage = `HTTP ${res.statusCode}`;
+              try {
+                const error = JSON.parse(data);
+                errorMessage = error.message || error.error || errorMessage;
+              } catch (e) {
+                if (data) {
+                  errorMessage = data;
+                }
+              }
+              reject(new Error(errorMessage));
             }
           });
         });
@@ -76,6 +89,10 @@ class PortForwardManager {
           req.destroy();
           reject(new Error('Request timeout'));
         });
+
+        if (options?.body) {
+          req.write(options.body);
+        }
 
         req.end();
       } catch (err) {
@@ -174,6 +191,77 @@ class PortForwardManager {
   async stopAllPortForwards(): Promise<void> {
     const mappingIds = Array.from(this.activeForwards.keys());
     await Promise.all(mappingIds.map((id) => this.stopPortForward(id)));
+  }
+
+  async changePort(mappingId: string, newPort: number, token: string): Promise<PortMapping> {
+    try {
+      const response = await this.httpRequest(
+        `${this.backendURL}/port-mappings/${mappingId}/port`,
+        token,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ port: newPort }),
+        },
+      );
+
+      // Nếu port forward đang chạy, cần restart với mapping mới
+      if (this.activeForwards.has(mappingId)) {
+        await this.stopPortForward(mappingId);
+        // Refresh mappings để lấy mapping mới
+        const mappings = await this.refreshMappings(token);
+        const newMapping = mappings.find((m) => m.mappingId === mappingId);
+        if (newMapping) {
+          await this.startPortForward(newMapping, token);
+        }
+      }
+
+      return response;
+    } catch (error) {
+      console.error('[PortForward] Failed to change port:', error);
+      throw error;
+    }
+  }
+
+  async getAvailableGateways(token: string): Promise<Array<{ id: string; ip: string }>> {
+    try {
+      // Lấy danh sách gateways từ available ports
+      const availablePorts = await this.httpRequest(
+        `${this.backendURL}/port-mappings/available-ports`,
+        token,
+      ) as Array<{ port: number; gatewayId: string; gatewayIp: string; portId: string }>;
+
+      // Tạo map unique gateways
+      const gatewayMap = new Map<string, { id: string; ip: string }>();
+      for (const portInfo of availablePorts) {
+        if (!gatewayMap.has(portInfo.gatewayId)) {
+          gatewayMap.set(portInfo.gatewayId, {
+            id: portInfo.gatewayId,
+            ip: portInfo.gatewayIp,
+          });
+        }
+      }
+
+      return Array.from(gatewayMap.values());
+    } catch (error) {
+      console.error('[PortForward] Failed to get available gateways:', error);
+      throw error;
+    }
+  }
+
+  async getAvailablePorts(token: string): Promise<Array<{ port: number; gatewayId: string; gatewayIp: string; portId: string }>> {
+    try {
+      const availablePorts = await this.httpRequest(
+        `${this.backendURL}/port-mappings/available-ports`,
+        token,
+      ) as Array<{ port: number; gatewayId: string; gatewayIp: string; portId: string }>;
+      
+      // Sort by port number
+      availablePorts.sort((a, b) => a.port - b.port);
+      return availablePorts;
+    } catch (error) {
+      console.error('[PortForward] Failed to get available ports:', error);
+      throw error;
+    }
   }
 }
 
