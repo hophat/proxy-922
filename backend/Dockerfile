@@ -2,12 +2,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Accept build arguments
+ARG NODE_ENV=development
+
 # Copy package files first for better layer caching
 COPY package*.json ./
 
 # Set NODE_ENV to ensure devDependencies are installed during build
 # This is needed for TypeScript compilation and drizzle-kit/drizzle-orm
-ENV NODE_ENV=development
+ENV NODE_ENV=${NODE_ENV}
 
 # Install dependencies with npm ci (faster and more reliable than npm install)
 # Use BuildKit cache mount for node_modules (requires DOCKER_BUILDKIT=1)
@@ -16,7 +19,9 @@ ENV NODE_ENV=development
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-# Copy source code
+# Copy source code (includes .env if it exists in the build context)
+# Note: For production, consider adding .env to .dockerignore and using
+# environment variables or secrets management instead
 COPY . .
 
 # Copy and set permissions for entrypoint script

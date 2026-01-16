@@ -47,7 +47,14 @@ services:
       # BuildKit cache mounts for faster npm installs
       cache_from:
         - node:20-alpine
+      # Pass environment variables from .env file to build process
+      args:
+        - NODE_ENV=${NODE_ENV:-development}
     container_name: Proxy96-backend
+    # Load environment variables from .env file (from root or backend directory)
+    env_file:
+      - .env
+      - ./backend/.env
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND_PORT:-3400}

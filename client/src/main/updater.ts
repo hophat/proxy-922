@@ -8,8 +8,8 @@ import * as semver from 'semver';
 import { spawn } from 'child_process';
 
 // Use same BACKEND_URL logic as main.ts for consistency
-// const BACKEND_URL = process.env.BACKEND_URL_DEV || process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
-const BACKEND_URL = process.env.BACKEND_URL_DEV || 'http://localhost:3300';
+const BACKEND_URL = process.env.BACKEND_URL_DEV || process.env.BACKEND_URL || 'https://api-proxy.gulagi.com';
+// const BACKEND_URL = process.env.BACKEND_URL_DEV || 'http://localhost:3300';
 const CURRENT_VERSION = app.getVersion();
 
 export interface UpdateInfo {
