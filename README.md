@@ -1,4 +1,5 @@
 # MVP Proxy Platform
+<img width="2048" height="1159" alt="image" src="https://github.com/user-attachments/assets/86670627-613e-4e21-94ce-8a8fb51c3a2b" />
 
 Hệ thống proxy platform với Windows Client, Proxy Gateway, và Backend API. Hỗ trợ rotate/sticky session, quota management, và health check SOCKS5 pool.
 
